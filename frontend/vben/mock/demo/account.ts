@@ -1,15 +1,15 @@
-import { MockMethod } from 'vite-plugin-mock';
-import { resultSuccess, resultError } from '../_util';
-import { ResultEnum } from '../../src/enums/httpEnum';
+import { MockMethod } from 'vite-plugin-mock'
+import { resultSuccess, resultError } from '../_util'
+import { ResultEnum } from '../../src/enums/httpEnum'
 
 const userInfo = {
-  name: 'Vben',
+  name: 'fumiama',
   userid: '00000001',
-  email: 'test@gmail.com',
-  signature: '海纳百川，有容乃大',
-  introduction: '微笑着，努力着，欣赏着',
-  title: '交互专家',
-  group: '某某某事业群－某某平台部－某某技术部－UED',
+  email: 'fumiama@demo.com',
+  signature: '天何所沓，十二焉分。日月安属，列星安陈。',
+  introduction: '日は山の端にかかりぬ。',
+  title: '超级管理员',
+  group: '信息与通信工程学院-网络工程系',
   tags: [
     {
       key: '0',
@@ -38,10 +38,10 @@ const userInfo = {
   ],
   notifyCount: 12,
   unreadCount: 11,
-  country: 'China',
-  address: 'Xiamen City 77',
-  phone: '0592-268888888',
-};
+  country: '中国',
+  address: '四川成都',
+  phone: '028-61830156',
+}
 
 export default [
   {
@@ -49,7 +49,7 @@ export default [
     timeout: 1000,
     method: 'get',
     response: () => {
-      return resultSuccess(userInfo);
+      return resultSuccess(userInfo)
     },
   },
   {
@@ -57,7 +57,7 @@ export default [
     method: 'post',
     statusCode: 401,
     response: () => {
-      return resultError();
+      return resultError()
     },
   },
   {
@@ -65,7 +65,7 @@ export default [
     method: 'post',
     statusCode: 200,
     response: () => {
-      return resultError('Token Expired!', { code: ResultEnum.TIMEOUT as number });
+      return resultError('Token Expired!', { code: ResultEnum.TIMEOUT as number })
     },
   },
-] as MockMethod[];
+] as MockMethod[]
