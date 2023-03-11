@@ -1,22 +1,22 @@
 {
-  "name": "vben-admin",
-  "version": "2.8.0",
+  "name": "paper-manager",
+  "version": "0.0.1",
   "author": {
-    "name": "vben",
-    "email": "anncwb@126.com",
-    "url": "https://github.com/anncwb"
+    "name": "fumiama",
+    "email": "fumiama@foxmail.com",
+    "url": "https://github.com/fumiama"
   },
   "scripts": {
     "commit": "czg",
     "bootstrap": "pnpm install",
-    "serve": "npm run dev",
+    "serve": "pnpm run dev",
     "dev": "vite",
     "build": "cross-env NODE_ENV=production vite build && esno ./build/script/postBuild.ts",
     "build:test": "cross-env vite build --mode test && esno ./build/script/postBuild.ts",
-    "build:no-cache": "pnpm clean:cache && npm run build",
-    "report": "cross-env REPORT=true npm run build",
+    "build:no-cache": "pnpm clean:cache && pnpm run build",
+    "report": "cross-env REPORT=true pnpm run build",
     "type:check": "vue-tsc --noEmit --skipLibCheck",
-    "preview": "npm run build && vite preview",
+    "preview": "pnpm run build && vite preview",
     "preview:dist": "vite preview",
     "log": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "clean:cache": "rimraf node_modules/.cache/ && rimraf node_modules/.vite",
@@ -28,7 +28,7 @@
     "test:unit": "jest",
     "test:gzip": "npx http-server dist --cors --gzip -c-1",
     "test:br": "npx http-server dist --cors --brotli -c-1",
-    "reinstall": "rimraf pnpm-lock.yaml && rimraf package.lock.json && rimraf node_modules && npm run bootstrap",
+    "reinstall": "rimraf pnpm-lock.yaml && rimraf package.lock.json && rimraf node_modules && pnpm run bootstrap",
     "prepare": "husky install",
     "gen:icon": "esno ./build/generate/icon/index.ts"
   },
