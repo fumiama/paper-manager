@@ -17,7 +17,7 @@
         <keep-alive v-if="openCache" :include="getCaches">
           <component :is="Component" :key="route.fullPath" />
         </keep-alive>
-        <div v-else :key="route.name">
+        <div v-else :key="route.name || 'N/A'">
           <component :is="Component" :key="route.fullPath" />
         </div>
       </transition>
