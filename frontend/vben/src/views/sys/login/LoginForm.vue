@@ -1,28 +1,37 @@
 <template>
   <LoginFormTitle v-show="getShow" class="enter-x" />
-  <Form
+  <!--<Form
     class="p-4 enter-x"
     :model="formData"
     :rules="getFormRules"
     ref="formRef"
     v-show="getShow"
     @keypress.enter="handleLogin"
+  >-->
+  <Form
+    class="p-4 enter-x"
+    :rules="getFormRules"
+    ref="formRef"
+    v-show="getShow"
+    @keypress.enter="handleLogin"
   >
     <FormItem name="account" class="enter-x">
-      <Input
+      <Input size="large" :placeholder="t('sys.login.userName')" class="fix-auto-fill" />
+      <!--<Input
         size="large"
         v-model:value="formData.account"
         :placeholder="t('sys.login.userName')"
         class="fix-auto-fill"
-      />
+      /> -->
     </FormItem>
     <FormItem name="password" class="enter-x">
-      <InputPassword
+      <InputPassword size="large" visibilityToggle :placeholder="t('sys.login.password')" />
+      <!-- <InputPassword
         size="large"
         visibilityToggle
         v-model:value="formData.password"
         :placeholder="t('sys.login.password')"
-      />
+      />-->
     </FormItem>
 
     <ARow class="enter-x">
@@ -72,7 +81,7 @@
   </Form>
 </template>
 <script lang="ts" setup>
-  import { reactive, ref, unref, computed } from 'vue'
+  import { /*reactive,*/ ref, unref, computed } from 'vue'
 
   import { Checkbox, Form, Input, Row, Col, Button } from 'ant-design-vue'
   import LoginFormTitle from './LoginFormTitle.vue'
@@ -101,10 +110,10 @@
   const loading = ref(false)
   const rememberMe = ref(false)
 
-  const formData = reactive({
+  /*const formData = reactive({
     account: 'vben',
     password: '123456',
-  })
+  })*/
 
   const { validForm } = useFormValid(formRef)
 

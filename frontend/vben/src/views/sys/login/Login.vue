@@ -27,7 +27,17 @@
               <span class="inline-block mt-4 text-3xl"> {{ t('sys.login.signInTitle') }}</span>
             </div>
             <div class="mt-5 font-normal text-white dark:text-gray-500 -enter-x">
-              {{ t('sys.login.signInDesc') }}
+              {{
+                t(
+                  'sys.login.signInDesc',
+                  ((): string[] => {
+                    let hour: number = new Date().getHours()
+                    if (hour < 10) return ['早']
+                    else if (hour < 19) return ['午']
+                    else return ['晚']
+                  })(),
+                )
+              }}
             </div>
           </div>
         </div>
