@@ -114,5 +114,5 @@ function createRule(message: string) {
       message,
       trigger: 'change',
     },
-  ]
+  ] as RuleObject[]
 }
