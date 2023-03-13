@@ -39,12 +39,12 @@
 
       <FullScreen v-if="getShowFullScreen" :class="`${prefixCls}-action__item fullscreen-item`" />
 
-      <AppLocalePicker
+      <!-- <AppLocalePicker
         v-if="getShowLocalePicker"
         :reload="true"
         :showText="false"
         :class="`${prefixCls}-action__item`"
-      />
+      />  -->
 
       <UserDropDown :theme="getHeaderTheme" />
 
@@ -70,7 +70,7 @@
 
   import { MenuModeEnum, MenuSplitTyeEnum } from '/@/enums/menuEnum'
   import { SettingButtonPositionEnum } from '/@/enums/appEnum'
-  import { AppLocalePicker } from '/@/components/Application'
+  // import { AppLocalePicker } from '/@/components/Application'
 
   import { UserDropDown, LayoutBreadcrumb, FullScreen, Notify } from './components'
   import { useAppInject } from '/@/hooks/web/useAppInject'
@@ -88,7 +88,7 @@
       LayoutBreadcrumb,
       LayoutMenu,
       UserDropDown,
-      AppLocalePicker,
+      // AppLocalePicker,
       FullScreen,
       Notify,
       AppSearch,
