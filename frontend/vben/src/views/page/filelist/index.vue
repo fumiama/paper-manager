@@ -1,18 +1,18 @@
 <template>
-  <PageWrapper :class="prefixCls" title="标准列表">
+  <PageWrapper :class="prefixCls" title="试卷资源管理器">
     <div :class="`${prefixCls}__top`">
       <a-row :gutter="12">
         <a-col :span="8" :class="`${prefixCls}__top-col`">
-          <div>我的待办</div>
-          <p>8个任务</p>
+          <div>总文件数</div>
+          <p>8</p>
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
-          <div>本周任务平均处理时间</div>
-          <p>32分钟</p>
+          <div>占用空间</div>
+          <p>32MB</p>
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
-          <div>本周完成任务数</div>
-          <p>24个任务</p>
+          <div>总题目数</div>
+          <p>24</p>
         </a-col>
       </a-row>
     </div>
@@ -28,7 +28,11 @@
               <template #title>
                 <span>{{ item.title }}</span>
                 <div class="extra" v-if="item.extra">
-                  {{ item.extra }}
+                  <a-button ghost color="success"> 成功 </a-button>
+                  &nbsp;&nbsp;
+                  <a-button ghost color="warning"> 警告 </a-button>
+                  &nbsp;&nbsp;
+                  <a-button ghost color="error"> 错误 </a-button>
                 </div>
               </template>
               <template #description>
@@ -116,19 +120,16 @@
       }
       .extra {
         position: absolute;
-        top: 20px;
-        right: 15px;
-        font-weight: normal;
-        color: @primary-color;
-        cursor: pointer;
+        top: 38px;
+        right: 8px;
       }
       .description {
         display: inline-block;
-        width: 40%;
+        width: 20%;
       }
       .info {
         display: inline-block;
-        width: 30%;
+        width: 40%;
         text-align: center;
         div {
           display: inline-block;
