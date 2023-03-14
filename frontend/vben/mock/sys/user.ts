@@ -55,7 +55,7 @@ export default [
         (item) => item.username === username && password === item.password,
       )
       if (!checkUser) {
-        return resultError('Incorrect account or password！')
+        return resultError('Incorrect account or password!')
       }
       const { userId, username: _username, token, realName, desc, roles } = checkUser
       return resultSuccess({
@@ -65,6 +65,19 @@ export default [
         token,
         realName,
         desc,
+      })
+    },
+  },
+  // mock reset password
+  {
+    url: '/basic-api/resetPassword',
+    timeout: 200,
+    method: 'post',
+    response: ({ body }) => {
+      const { username, phonenum } = body
+      return resultSuccess({
+        msg:
+          '已将用户' + username + '电话' + phonenum + '的重置请求上报, 请耐心等待管理员与您联系!',
       })
     },
   },

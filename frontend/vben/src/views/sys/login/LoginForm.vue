@@ -1,37 +1,28 @@
 <template>
   <LoginFormTitle v-show="getShow" class="enter-x" />
-  <!--<Form
+  <Form
     class="p-4 enter-x"
     :model="formData"
     :rules="getFormRules"
     ref="formRef"
     v-show="getShow"
     @keypress.enter="handleLogin"
-  >-->
-  <Form
-    class="p-4 enter-x"
-    :rules="getFormRules"
-    ref="formRef"
-    v-show="getShow"
-    @keypress.enter="handleLogin"
   >
     <FormItem name="account" class="enter-x">
-      <Input size="large" :placeholder="t('sys.login.userName')" class="fix-auto-fill" />
-      <!--<Input
+      <Input
         size="large"
         v-model:value="formData.account"
         :placeholder="t('sys.login.userName')"
         class="fix-auto-fill"
-      /> -->
+      />
     </FormItem>
     <FormItem name="password" class="enter-x">
-      <InputPassword size="large" visibilityToggle :placeholder="t('sys.login.password')" />
-      <!-- <InputPassword
+      <InputPassword
         size="large"
         visibilityToggle
         v-model:value="formData.password"
         :placeholder="t('sys.login.password')"
-      />-->
+      />
     </FormItem>
 
     <ARow class="enter-x">
@@ -54,7 +45,14 @@
     </ARow>
 
     <FormItem class="enter-x">
-      <Button type="primary" size="large" block @click="handleLogin" :loading="loading">
+      <Button
+        type="primary"
+        size="large"
+        block
+        @click="handleLogin"
+        :loading="loading"
+        :disabled="!(formData.account && formData.password)"
+      >
         {{ t('sys.login.loginButton') }}
       </Button>
       <Button
@@ -81,7 +79,7 @@
   </Form>
 </template>
 <script lang="ts" setup>
-  import { /*reactive,*/ ref, unref, computed } from 'vue'
+  import { reactive, ref, unref, computed } from 'vue'
 
   import { Checkbox, Form, Input, Row, Col, Button } from 'ant-design-vue'
   import LoginFormTitle from './LoginFormTitle.vue'
@@ -92,7 +90,7 @@
   import { useUserStore } from '/@/store/modules/user'
   import { LoginStateEnum, useLoginState, useFormRules, useFormValid } from './useLogin'
   import { useDesign } from '/@/hooks/web/useDesign'
-  //import { onKeyStroke } from '@vueuse/core';
+  import { onKeyStroke } from '@vueuse/core'
 
   const ACol = Col
   const ARow = Row
@@ -110,14 +108,14 @@
   const loading = ref(false)
   const rememberMe = ref(false)
 
-  /*const formData = reactive({
-    account: 'vben',
-    password: '123456',
-  })*/
+  const formData = reactive({
+    account: '',
+    password: '',
+  })
 
   const { validForm } = useFormValid(formRef)
 
-  //onKeyStroke('Enter', handleLogin);
+  onKeyStroke('Enter', handleLogin)
 
   const getShow = computed(() => unref(getLoginState) === LoginStateEnum.LOGIN)
 

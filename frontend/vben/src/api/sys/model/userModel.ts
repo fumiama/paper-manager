@@ -6,6 +6,14 @@ export interface LoginParams {
   password: string
 }
 
+/**
+ * @description: Reset password interface parameters
+ */
+export interface ResetPasswordParams {
+  username: string
+  phonenum: string
+}
+
 export interface RoleInfo {
   roleName: string
   value: string
@@ -18,6 +26,13 @@ export interface LoginResultModel {
   userId: string | number
   token: string
   role: RoleInfo
+}
+
+/**
+ * @description: Reset password interface return value
+ */
+export interface ResetPasswordResultModel {
+  msg: string
 }
 
 /**
