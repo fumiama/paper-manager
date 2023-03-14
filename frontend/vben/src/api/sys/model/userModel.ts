@@ -11,7 +11,16 @@ export interface LoginParams {
  */
 export interface ResetPasswordParams {
   username: string
-  phonenum: string
+  mobile: string
+}
+
+/**
+ * @description: Register interface parameters
+ */
+export interface RegisterParams {
+  username: string
+  mobile: string
+  password: string
 }
 
 export interface RoleInfo {
@@ -32,6 +41,13 @@ export interface LoginResultModel {
  * @description: Reset password interface return value
  */
 export interface ResetPasswordResultModel {
+  msg: string
+}
+
+/**
+ * @description: Register interface return value
+ */
+export interface RegisterResultModel {
   msg: string
 }
 

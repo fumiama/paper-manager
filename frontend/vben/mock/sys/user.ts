@@ -4,7 +4,7 @@ import { resultError, resultSuccess, getRequestToken, requestParams } from '../_
 export function createFakeUserList() {
   return [
     {
-      userId: '00000001',
+      userId: '1',
       username: 'fumiama',
       realName: '源文雨',
       avatar: 'https://q1.qlogo.cn/g?b=qq&nk=1332524221&s=640',
@@ -14,24 +14,40 @@ export function createFakeUserList() {
       homePath: '/dashboard/analysis',
       roles: [
         {
-          roleName: '超级管理员',
+          roleName: '课程组长',
           value: 'super',
         },
       ],
     },
     {
       userId: '2',
-      username: 'test',
+      username: 'filemgr',
       password: '123456',
-      realName: 'test user',
+      realName: '归档代理',
       avatar: 'https://q1.qlogo.cn/g?b=qq&nk=339449197&s=640',
-      desc: 'tester',
+      desc: 'file manager',
       token: 'fakeToken2',
       homePath: '/dashboard/workbench',
       roles: [
         {
-          roleName: 'Tester',
-          value: 'test',
+          roleName: '归档代理',
+          value: 'filemgr',
+        },
+      ],
+    },
+    {
+      userId: '3',
+      username: 'user',
+      password: '123456',
+      realName: '课程组员',
+      avatar: 'https://q1.qlogo.cn/g?b=qq&nk=468131931&s=640',
+      desc: 'normal user',
+      token: 'fakeToken3',
+      homePath: '/dashboard/workbench',
+      roles: [
+        {
+          roleName: '课程组员',
+          value: 'user',
         },
       ],
     },
@@ -74,10 +90,21 @@ export default [
     timeout: 200,
     method: 'post',
     response: ({ body }) => {
-      const { username, phonenum } = body
+      const { username, mobile } = body
       return resultSuccess({
-        msg:
-          '已将用户' + username + '电话' + phonenum + '的重置请求上报, 请耐心等待管理员与您联系!',
+        msg: '已将用户' + username + '电话' + mobile + '的重置请求上报, 请耐心等待!',
+      })
+    },
+  },
+  // mock register
+  {
+    url: '/basic-api/register',
+    timeout: 200,
+    method: 'post',
+    response: ({ body }) => {
+      const { username, mobile } = body
+      return resultSuccess({
+        msg: '已将用户' + username + '电话' + mobile + '的注册请求上报, 请耐心等待!',
       })
     },
   },

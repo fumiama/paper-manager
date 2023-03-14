@@ -4,7 +4,9 @@ import {
   LoginResultModel,
   GetUserInfoModel,
   ResetPasswordParams,
+  RegisterParams,
   ResetPasswordResultModel,
+  RegisterResultModel,
 } from './model/userModel'
 
 import { ErrorMessageMode } from '/#/axios'
@@ -13,6 +15,7 @@ enum Api {
   Login = '/login',
   Logout = '/logout',
   ResetPassword = '/resetPassword',
+  Register = '/register',
   GetUserInfo = '/getUserInfo',
   GetPermCode = '/getPermCode',
   TestRetry = '/testRetry',
@@ -40,6 +43,21 @@ export function resetPasswordApi(params: ResetPasswordParams, mode: ErrorMessage
   return defHttp.post<ResetPasswordResultModel>(
     {
       url: Api.ResetPassword,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+    },
+  )
+}
+
+/**
+ * @description: register api
+ */
+export function registerApi(params: RegisterParams, mode: ErrorMessageMode = 'modal') {
+  return defHttp.post<RegisterResultModel>(
+    {
+      url: Api.Register,
       params,
     },
     {

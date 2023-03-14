@@ -18,14 +18,14 @@
           class="fix-auto-fill"
         />
       </FormItem>
-      <FormItem name="sms" class="enter-x">
+      <!--<FormItem name="sms" class="enter-x">
         <CountdownInput
           size="large"
           class="fix-auto-fill"
           v-model:value="formData.sms"
           :placeholder="t('sys.login.smsCode')"
         />
-      </FormItem>
+      </FormItem>-->
       <FormItem name="password" class="enter-x">
         <StrengthMeter
           size="large"
@@ -56,6 +56,7 @@
         block
         @click="handleRegister"
         :loading="loading"
+        :disabled="!isFormDataFull()"
       >
         {{ t('sys.login.registerButton') }}
       </Button>
@@ -70,9 +71,12 @@
   import LoginFormTitle from './LoginFormTitle.vue'
   import { Form, Input, Button, Checkbox } from 'ant-design-vue'
   import { StrengthMeter } from '/@/components/StrengthMeter'
-  import { CountdownInput } from '/@/components/CountDown'
+  // import { CountdownInput } from '/@/components/CountDown'
+  import { registerApi } from '/@/api/sys/user'
+  import { RegisterParams } from '/@/api/sys/model/userModel'
   import { useI18n } from '/@/hooks/web/useI18n'
   import { useLoginState, useFormRules, useFormValid, LoginStateEnum } from './useLogin'
+  import { useMessage } from '/@/hooks/web/useMessage'
 
   const FormItem = Form.Item
   const InputPassword = Input.Password
@@ -87,7 +91,7 @@
     password: '',
     confirmPassword: '',
     mobile: '',
-    sms: '',
+    // sms: '',
     policy: false,
   })
 
@@ -96,9 +100,45 @@
 
   const getShow = computed(() => unref(getLoginState) === LoginStateEnum.REGISTER)
 
+  const { notification } = useMessage()
+
   async function handleRegister() {
+    const form = unref(formRef)
+    if (!form) return
     const data = await validForm()
     if (!data) return
-    console.log(data)
+    try {
+      loading.value = true
+      const { msg } = await registerApi({
+        username: data.account,
+        mobile: data.mobile,
+        password: data.password,
+      } as RegisterParams)
+      notification.info({
+        message: t('sys.login.signUpFormTitle'),
+        description: msg,
+        duration: 10,
+      })
+    } catch (error) {
+      notification.error({
+        message: (error as Error).name,
+        description: (error as Error).message,
+        duration: 3,
+      })
+    } finally {
+      loading.value = false
+      form.resetFields()
+      handleBackLogin()
+    }
+  }
+
+  function isFormDataFull(): boolean {
+    return (
+      formData.account != '' &&
+      formData.password != '' &&
+      formData.confirmPassword != '' &&
+      formData.mobile != '' &&
+      formData.policy
+    )
   }
 </script>

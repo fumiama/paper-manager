@@ -70,7 +70,7 @@
       loading.value = true
       const { msg } = await resetPasswordApi({
         username: data.account,
-        phonenum: data.mobile,
+        mobile: data.mobile,
       } as ResetPasswordParams)
       notification.info({
         message: t('sys.login.forgetFormTitle'),

@@ -24,7 +24,7 @@ const roleList = (() => {
     result.push({
       id: index + 1,
       orderNo: `${index + 1}`,
-      roleName: ['超级管理员', '权限管理员', '归档管理员', '普通用户'][index],
+      roleName: ['课程组长', '归档代理', '课程组员'][index],
       roleValue: '@first',
       createTime: '@datetime',
       remark: '@cword(10,20)',

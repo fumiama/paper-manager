@@ -8,7 +8,7 @@ const userInfo = {
   email: 'fumiama@demo.com',
   signature: '天何所沓，十二焉分。日月安属，列星安陈。',
   introduction: '日は山の端にかかりぬ。',
-  title: '超级管理员',
+  title: '课程组长',
   group: '信息与通信工程学院-网络工程系',
   tags: [
     {

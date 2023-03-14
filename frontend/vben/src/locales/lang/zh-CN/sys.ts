@@ -14,7 +14,7 @@ export default {
     errMsg404: '网络请求错误, 未找到该资源!',
     errMsg405: '网络请求错误, 请求方法未允许!',
     errMsg408: '网络请求超时!',
-    errMsg500: '服务器错误, 请联系管理员!',
+    errMsg500: '服务器错误, 请联系课程组长!',
     errMsg501: '网络未实现!',
     errMsg502: '网络错误!',
     errMsg503: '服务不可用, 服务器暂时过载或维护!',
@@ -63,7 +63,7 @@ export default {
 
     signInTitle: '电子科技大学试卷管理系统',
     signInDesc: '{0}安, 祝您工作顺利',
-    policy: '我同意xxx隐私政策',
+    policy: '我同意将填写的信息上传至服务器并使课程组长知晓',
     scanSign: `扫码后点击"确认", 即可完成登录`,
 
     loginButton: '登录',
