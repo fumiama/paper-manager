@@ -24,7 +24,7 @@ export function createFakeUserList() {
       username: 'filemgr',
       password: '123456',
       realName: '归档代理',
-      avatar: 'https://q1.qlogo.cn/g?b=qq&nk=339449197&s=640',
+      avatar: 'https://q1.qlogo.cn/g?b=qq&nk=468131917&s=640',
       desc: 'file manager',
       token: 'fakeToken2',
       homePath: '/dashboard/workbench',

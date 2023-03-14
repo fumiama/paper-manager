@@ -4,8 +4,15 @@
       <div class="flex justify-between items-center">
         <span class="flex-1">
           <a :href="GITHUB_URL" target="_blank">{{ name }}</a>
-          是一个基于Vue3.0、Vite、 Ant-Design-Vue 、TypeScript
-          的后台解决方案，目标是为中大型项目开发,提供现成的开箱解决方案及丰富的示例,原则上不会限制任何代码用于商用。
+          是
+          <a href="https://github.com/fumiama" target="_blank">源文雨</a>
+          的大学本科毕业设计项目。感谢
+          <a href="https://www.sice.uestc.edu.cn/info/1302/5185.htm" target="_blank">马立香</a>
+          老师在我毕业设计期间对本项目的悉心指导。
+          <br />
+          本项目前端使用
+          <a href="https://github.com/vbenjs/vue-vben-admin" target="_blank">vue-vben-admin</a>
+          ，后端使用 Golang 与 SQLite 数据库，最后统一编译为一个开箱即用的可执行文件。
         </span>
       </div>
     </template>
@@ -29,7 +36,7 @@
   const devSchema: DescItem[] = []
 
   const commonTagRender = (color: string) => (curVal) => h(Tag, { color }, () => curVal)
-  const commonLinkRender = (text: string) => (href) => h('a', { href, target: '_blank' }, text)
+  // const commonLinkRender = (text: string) => (href) => h('a', { href, target: '_blank' }, text)
 
   const infoSchema: DescItem[] = [
     {
@@ -41,21 +48,6 @@
       label: '最后编译时间',
       field: 'lastBuildTime',
       render: commonTagRender('blue'),
-    },
-    {
-      label: '文档地址',
-      field: 'doc',
-      render: commonLinkRender('文档地址'),
-    },
-    {
-      label: '预览地址',
-      field: 'preview',
-      render: commonLinkRender('预览地址'),
-    },
-    {
-      label: 'Github',
-      field: 'github',
-      render: commonLinkRender('Github'),
     },
   ]
 
