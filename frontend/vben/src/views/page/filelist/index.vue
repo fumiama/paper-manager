@@ -18,11 +18,11 @@
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
           <div>占用空间</div>
-          <p> {{ totalSize }}MB </p>
+          <p> {{ cardList._totalSize }}MB </p>
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
           <div>总题目数</div>
-          <p> {{ totalQuestions }} </p>
+          <p> {{ cardList._totalQuestions }} </p>
         </a-col>
       </a-row>
     </div>
@@ -30,7 +30,7 @@
     <div :class="`${prefixCls}__content`">
       <a-list :pagination="pagination">
         <template
-          v-for="item in getListOfPage(pagination.pageSize)[pagination.current - 1]"
+          v-for="item in getListOfPage(pagination.pageSize, pagination.current)"
           :key="item.id"
         >
           <a-list-item class="list">
@@ -55,6 +55,7 @@
                     color="error"
                     v-if="hasPermission([RoleEnum.SUPER])"
                     :disabled="item.percent > 0 && item.percent < 100"
+                    @click="deleteFileBy(item.id)"
                   >
                     删除
                   </a-button>
@@ -92,7 +93,7 @@
   import { defineComponent } from 'vue'
   import { Icon } from '/@/components/Icon'
   import { BasicUpload } from '/@/components/Upload'
-  import { cardList, totalSize, totalQuestions } from './data'
+  import { cardList, getListOfPage, deleteFileByID, pagination } from './data'
   import { PageWrapper } from '/@/components/Page'
   import { useMessage } from '/@/hooks/web/useMessage'
   import { usePermission } from '/@/hooks/web/usePermission'
@@ -100,8 +101,18 @@
   import { List } from 'ant-design-vue'
   import { uploadApi } from '/@/api/sys/upload'
   import { useI18n } from '/@/hooks/web/useI18n'
+  import { delFile } from '/@/api/page'
+  import { DelFile } from '/@/api/page/model/fileListModel'
 
   const { t } = useI18n()
+  const { createMessage } = useMessage()
+
+  function deleteFileBy(id: number) {
+    delFile(id).then((value: DelFile) => {
+      createMessage.info(value.msg)
+      deleteFileByID(id)
+    })
+  }
 
   export default defineComponent({
     components: {
@@ -116,19 +127,7 @@
       [Col.name]: Col,
     },
     setup() {
-      const { createMessage } = useMessage()
       const { hasPermission } = usePermission()
-
-      function getListOfPage(pageSize: number): any[] {
-        let listOfPage: any[] = []
-        for (let i = 0; i < cardList.length / pageSize; i++) {
-          listOfPage.push(cardList.slice(i * pageSize, (i + 1) * pageSize))
-        }
-        if (cardList.length % pageSize) {
-          listOfPage.push(cardList.slice((cardList.length / pageSize) * pageSize))
-        }
-        return listOfPage
-      }
 
       return {
         t,
@@ -139,19 +138,10 @@
         uploadApi,
         hasPermission,
         prefixCls: 'list-basic',
-        getListOfPage: getListOfPage,
-        totalSize,
-        totalQuestions,
-        pagination: {
-          current: 1,
-          total: cardList.length,
-          show: true,
-          pageSize: 10,
-          onChange: function (page: number, pageSize: number) {
-            this.current = page
-            this.pageSize = pageSize
-          },
-        },
+        getListOfPage,
+        deleteFileBy,
+        cardList,
+        pagination,
       }
     },
   })

@@ -1,9 +1,13 @@
+import { randomInt } from 'crypto'
 import { MockMethod } from 'vite-plugin-mock'
 import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
 
-export function createFileList() {
+const deletedIDs: number[] = []
+
+function createFileList() {
   const lst: any[] = []
   for (let i = 100; i > 0; i--) {
+    if (deletedIDs.includes(i)) continue
     lst.push({
       id: i,
       title: '接入网2020B卷',
@@ -12,7 +16,7 @@ export function createFileList() {
       questions: 10,
       author: '课程组长',
       datetime: '2020-11-26 17:39',
-      percent: i - 1,
+      percent: randomInt(0, 100) + 1,
     })
   }
   return lst
@@ -47,6 +51,21 @@ export default [
       if (!id || id < 0) return resultError('Invalid id')
       return resultSuccess({
         percent: 100,
+      })
+    },
+  },
+  {
+    url: '/basic-api/delFile',
+    timeout: 200,
+    method: 'get',
+    response: (request: requestParams) => {
+      const token = getRequestToken(request)
+      if (!token) return resultError('Invalid token')
+      const id = Number(request.query.id)
+      if (!id || id < 0) return resultError('Invalid id')
+      deletedIDs.push(id)
+      return resultSuccess({
+        msg: '已成功删除文件' + id + '.',
       })
     },
   },

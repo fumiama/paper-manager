@@ -17,3 +17,7 @@ export type getFileListModel = FileListGroupItem[]
 export interface FilePercent {
   percent: number
 }
+
+export interface DelFile {
+  msg: string
+}
