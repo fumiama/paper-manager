@@ -27,7 +27,7 @@
               </template>
               <template #title>
                 <span>{{ item.title }}</span>
-                <div class="extra" v-if="item.extra">
+                <div class="extra">
                   <a-button ghost color="success"> 成功 </a-button>
                   &nbsp;&nbsp;
                   <a-button ghost color="warning"> 警告 </a-button>
