@@ -47,6 +47,7 @@
                     color="warning"
                     v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
                     :disabled="item.percent != 0"
+                    @click="analyzeFile(item)"
                   >
                     解析
                   </a-button>
@@ -94,7 +95,14 @@
   import { defineComponent } from 'vue'
   import { Icon } from '/@/components/Icon'
   import { BasicUpload } from '/@/components/Upload'
-  import { cardList, getListOfPage, deleteFileByID, pagination } from './data'
+  import {
+    cardList,
+    getListOfPage,
+    deleteFileByID,
+    pagination,
+    refreshFilePercent,
+    random,
+  } from './data'
   import { PageWrapper } from '/@/components/Page'
   import { useMessage } from '/@/hooks/web/useMessage'
   import { usePermission } from '/@/hooks/web/usePermission'
@@ -102,7 +110,7 @@
   import { List } from 'ant-design-vue'
   import { uploadApi } from '/@/api/sys/upload'
   import { useI18n } from '/@/hooks/web/useI18n'
-  import { delFile } from '/@/api/page'
+  import { delFile, analyzeFile } from '/@/api/page'
 
   const { t } = useI18n()
   const { createMessage } = useMessage()
@@ -123,6 +131,21 @@
       setTimeout(() => {
         item.delloading = false
       }, 500)
+    }
+  }
+
+  async function analFile(item: any) {
+    try {
+      const msg = await analyzeFile(item.id)
+      if (msg) {
+        createMessage.success(msg.msg)
+        if (!item.hassettimeout && item.percent == 0) {
+          setTimeout(refreshFilePercent(item), 1000 + random(0, 1000))
+          item.hassettimeout = true
+        }
+      }
+    } catch (error) {
+      createMessage.error((error as unknown as Error).message)
     }
   }
 
@@ -152,6 +175,7 @@
         prefixCls: 'list-basic',
         getListOfPage,
         deleteFile,
+        analyzeFile: analFile,
         cardList,
         pagination,
       }

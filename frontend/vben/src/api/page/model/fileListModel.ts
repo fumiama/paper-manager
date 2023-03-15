@@ -21,3 +21,7 @@ export interface FilePercent {
 export interface DelFile {
   msg: string
 }
+
+export interface AnalyzeFile {
+  msg: string
+}

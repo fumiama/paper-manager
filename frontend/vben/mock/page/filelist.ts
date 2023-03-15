@@ -3,6 +3,8 @@ import { resultError, resultSuccess, getRequestToken, requestParams } from '../_
 
 const deletedIDs: number[] = []
 
+const analyzingIDs: { id: number; per: number }[] = []
+
 function createFileList() {
   const lst: any[] = []
   for (let i = 100; i > 0; i--) {
@@ -48,6 +50,21 @@ export default [
       if (!token) return resultError('Invalid token')
       const id = request.query.id
       if (!id || id < 0) return resultError('Invalid id')
+      let p = 0
+      analyzingIDs.map((value: { id: number; per: number }, index: number) => {
+        if (!p && value.id == id) {
+          value.per += 10
+          if (value.per >= 100) {
+            analyzingIDs.splice(index, 1)
+            p = 100
+          }
+          p = value.per
+        }
+      })
+      if (p > 0)
+        return resultSuccess({
+          percent: p,
+        })
       return resultSuccess({
         percent: 100,
       })
@@ -65,6 +82,21 @@ export default [
       deletedIDs.push(id)
       return resultSuccess({
         msg: '已成功删除文件' + id + '.',
+      })
+    },
+  },
+  {
+    url: '/basic-api/analyzeFile',
+    timeout: 1000,
+    method: 'get',
+    response: (request: requestParams) => {
+      const token = getRequestToken(request)
+      if (!token) return resultError('Invalid token')
+      const id = Number(request.query.id)
+      if (!id || id < 0) return resultError('Invalid id')
+      analyzingIDs.push({ id: id, per: 1 })
+      return resultSuccess({
+        msg: '正在分析' + id + ', 请耐心等待...',
       })
     },
   },

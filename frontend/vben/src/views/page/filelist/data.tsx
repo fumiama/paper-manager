@@ -2,15 +2,18 @@ import { reactive } from 'vue'
 import { getFileList, getFilePercent } from '/@/api/page'
 import { getFileListModel } from '/@/api/page/model/fileListModel'
 
-const random = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
+export const random = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1) + min)
 
-export function refreshFilePercent(arr: any[], i: number) {
+export function refreshFilePercent(item: any) {
   return async () => {
-    const p = await getFilePercent(arr[i].id)
-    arr[i].percent = p.percent
-    if (p.percent < 100) {
-      setTimeout(refreshFilePercent(arr, i), 1000)
-    }
+    const p = await getFilePercent(item.id)
+    if (p.percent) {
+      item.percent = p.percent
+      if (p.percent < 100) {
+        setTimeout(refreshFilePercent(item), 1000)
+      }
+    } else item.hassettimeout = false
   }
 }
 
@@ -22,7 +25,7 @@ export function getListOfPage(pageSize: number, page: number): any[] {
   else lst = reactive(cardList._cardList.slice((cardList._cardList.length / pageSize) * pageSize))
   for (let i = 0; i < lst.length; i++) {
     if (!lst[i].hassettimeout && lst[i].percent > 0 && lst[i].percent < 100) {
-      setTimeout(refreshFilePercent(lst, i), 1000 + random(0, 1000))
+      setTimeout(refreshFilePercent(lst[i]), 1000 + random(0, 1000))
       lst[i].hassettimeout = true
     }
   }
