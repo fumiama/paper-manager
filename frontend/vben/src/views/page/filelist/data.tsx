@@ -4,7 +4,7 @@ import { getFileListModel } from '/@/api/page/model/fileListModel'
 
 const random = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
 
-function refreshFilePercent(arr: any[], i: number) {
+export function refreshFilePercent(arr: any[], i: number) {
   return async () => {
     const p = await getFilePercent(arr[i].id)
     arr[i].percent = p.percent
@@ -47,6 +47,7 @@ async function refreshFileList() {
       author: lst[i].author,
       percent: lst[i].percent,
       hassettimeout: false,
+      delloading: false,
     })
     __totalSize += lst[i].size
     __totalQuestions += lst[i].questions

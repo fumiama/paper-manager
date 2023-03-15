@@ -55,7 +55,8 @@
                     color="error"
                     v-if="hasPermission([RoleEnum.SUPER])"
                     :disabled="item.percent > 0 && item.percent < 100"
-                    @click="deleteFileBy(item.id)"
+                    :loading="item.delloading"
+                    @click="deleteFile(item)"
                   >
                     删除
                   </a-button>
@@ -102,16 +103,27 @@
   import { uploadApi } from '/@/api/sys/upload'
   import { useI18n } from '/@/hooks/web/useI18n'
   import { delFile } from '/@/api/page'
-  import { DelFile } from '/@/api/page/model/fileListModel'
 
   const { t } = useI18n()
   const { createMessage } = useMessage()
 
-  function deleteFileBy(id: number) {
-    delFile(id).then((value: DelFile) => {
-      createMessage.info(value.msg)
-      deleteFileByID(id)
-    })
+  async function deleteFile(item: any) {
+    try {
+      item.delloading = true
+      const msg = await delFile(item.id)
+      if (msg) {
+        createMessage.success(msg.msg)
+        setTimeout(() => {
+          deleteFileByID(item.id)
+        }, 1000)
+      }
+    } catch (error) {
+      createMessage.error((error as unknown as Error).message)
+    } finally {
+      setTimeout(() => {
+        item.delloading = false
+      }, 500)
+    }
   }
 
   export default defineComponent({
@@ -139,7 +151,7 @@
         hasPermission,
         prefixCls: 'list-basic',
         getListOfPage,
-        deleteFileBy,
+        deleteFile,
         cardList,
         pagination,
       }

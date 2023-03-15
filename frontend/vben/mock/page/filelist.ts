@@ -1,4 +1,3 @@
-import { randomInt } from 'crypto'
 import { MockMethod } from 'vite-plugin-mock'
 import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
 
@@ -16,7 +15,7 @@ function createFileList() {
       questions: 10,
       author: '课程组长',
       datetime: '2020-11-26 17:39',
-      percent: randomInt(0, 100) + 1,
+      percent: 0,
     })
   }
   return lst
