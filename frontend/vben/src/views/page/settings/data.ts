@@ -26,12 +26,6 @@ export const settingList = [
 // 基础设置 form
 export const baseSetschemas: FormSchema[] = [
   {
-    field: 'email',
-    component: 'Input',
-    label: '邮箱',
-    colProps: { span: 18 },
-  },
-  {
     field: 'name',
     component: 'Input',
     label: '昵称',
@@ -43,12 +37,6 @@ export const baseSetschemas: FormSchema[] = [
     label: '个人简介',
     colProps: { span: 18 },
   },
-  {
-    field: 'address',
-    component: 'Input',
-    label: '所在地区',
-    colProps: { span: 18 },
-  },
 ]
 
 // 安全设置 list
@@ -56,13 +44,13 @@ export const secureSettingList: ListItem[] = [
   {
     key: '1',
     title: '账户密码',
-    description: '当前密码强度：：强',
+    description: '上次修改密码: 2022年1月1日0时0分0秒',
     extra: '修改',
   },
   {
     key: '2',
     title: '我的手机',
-    description: '已绑定手机：：138****8293',
+    description: '已绑定手机: 138****8293',
     extra: '修改',
   },
 ]

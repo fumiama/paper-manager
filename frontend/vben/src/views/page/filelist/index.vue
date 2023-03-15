@@ -14,15 +14,15 @@
       <a-row :gutter="12">
         <a-col :span="8" :class="`${prefixCls}__top-col`">
           <div>总文件数</div>
-          <p>8</p>
+          <p> {{ pagination.total }}</p>
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
           <div>占用空间</div>
-          <p>32MB</p>
+          <p> {{ totalSize }}MB </p>
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
           <div>总题目数</div>
-          <p>24</p>
+          <p> {{ totalQuestions }} </p>
         </a-col>
       </a-row>
     </div>
@@ -41,17 +41,21 @@
               <template #title>
                 <span>{{ item.title }}</span>
                 <div class="extra">
-                  <a-button ghost color="success"> 查阅 </a-button>
+                  <a-button color="success" :disabled="item.percent < 100"> 查阅 </a-button>
                   &nbsp;&nbsp;
                   <a-button
-                    ghost
                     color="warning"
                     v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
+                    :disabled="item.percent != 0"
                   >
                     解析
                   </a-button>
                   &nbsp;&nbsp;
-                  <a-button ghost color="error" v-if="hasPermission([RoleEnum.SUPER])">
+                  <a-button
+                    color="error"
+                    v-if="hasPermission([RoleEnum.SUPER])"
+                    :disabled="item.percent > 0 && item.percent < 100"
+                  >
                     删除
                   </a-button>
                 </div>
@@ -61,13 +65,19 @@
                   {{ item.description }}
                 </div>
                 <div class="info">
-                  <div><span>文件大小</span>1MB</div>
+                  <div><span>文件大小</span>{{ item.size }}MB</div>
                   <div><span>上传用户</span>{{ item.author }}</div>
                   <div><span>上传时间</span>{{ item.datetime }}</div>
                 </div>
                 <div class="progress">
                   <div><span>解析进度</span></div>
-                  <Progress :percent="item.percent" status="active" />
+                  <Progress
+                    :percent="item.percent"
+                    :status='((): "normal" | "success" | "active" | "exception" | undefined => { 
+                      if (item.percent < 100) return "active"
+                      return "success"
+                    })()'
+                  />
                 </div>
               </template>
             </a-list-item-meta>
@@ -82,7 +92,7 @@
   import { defineComponent } from 'vue'
   import { Icon } from '/@/components/Icon'
   import { BasicUpload } from '/@/components/Upload'
-  import { cardList } from './data'
+  import { cardList, totalSize, totalQuestions } from './data'
   import { PageWrapper } from '/@/components/Page'
   import { useMessage } from '/@/hooks/web/useMessage'
   import { usePermission } from '/@/hooks/web/usePermission'
@@ -130,6 +140,8 @@
         hasPermission,
         prefixCls: 'list-basic',
         getListOfPage: getListOfPage,
+        totalSize,
+        totalQuestions,
         pagination: {
           current: 1,
           total: cardList.length,
