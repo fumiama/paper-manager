@@ -1,5 +1,15 @@
 <template>
-  <PageWrapper :class="prefixCls" title="试卷资源管理器">
+  <PageWrapper :class="prefixCls" :title="t('routes.filelist.name')">
+    <template #headerContent>
+      <BasicUpload
+        v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
+        :maxSize="20"
+        :maxNumber="10"
+        @change="handleChange"
+        :api="uploadApi"
+        :accept="['application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
+      />
+    </template>
     <div :class="`${prefixCls}__top`">
       <a-row :gutter="12">
         <a-col :span="8" :class="`${prefixCls}__top-col`">
@@ -19,7 +29,10 @@
 
     <div :class="`${prefixCls}__content`">
       <a-list :pagination="pagination">
-        <template v-for="item in list" :key="item.id">
+        <template
+          v-for="item in getListOfPage(pagination.pageSize)[pagination.current - 1]"
+          :key="item.id"
+        >
           <a-list-item class="list">
             <a-list-item-meta>
               <template #avatar>
@@ -28,11 +41,19 @@
               <template #title>
                 <span>{{ item.title }}</span>
                 <div class="extra">
-                  <a-button ghost color="success"> 成功 </a-button>
+                  <a-button ghost color="success"> 查阅 </a-button>
                   &nbsp;&nbsp;
-                  <a-button ghost color="warning"> 警告 </a-button>
+                  <a-button
+                    ghost
+                    color="warning"
+                    v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
+                  >
+                    解析
+                  </a-button>
                   &nbsp;&nbsp;
-                  <a-button ghost color="error"> 错误 </a-button>
+                  <a-button ghost color="error" v-if="hasPermission([RoleEnum.SUPER])">
+                    删除
+                  </a-button>
                 </div>
               </template>
               <template #description>
@@ -40,10 +61,12 @@
                   {{ item.description }}
                 </div>
                 <div class="info">
-                  <div><span>Owner</span>{{ item.author }}</div>
-                  <div><span>开始时间</span>{{ item.datetime }}</div>
+                  <div><span>文件大小</span>1MB</div>
+                  <div><span>上传用户</span>{{ item.author }}</div>
+                  <div><span>上传时间</span>{{ item.datetime }}</div>
                 </div>
                 <div class="progress">
+                  <div><span>解析进度</span></div>
                   <Progress :percent="item.percent" status="active" />
                 </div>
               </template>
@@ -57,12 +80,22 @@
 <script lang="ts">
   import { Progress, Row, Col } from 'ant-design-vue'
   import { defineComponent } from 'vue'
-  import Icon from '/@/components/Icon/index'
+  import { Icon } from '/@/components/Icon'
+  import { BasicUpload } from '/@/components/Upload'
   import { cardList } from './data'
   import { PageWrapper } from '/@/components/Page'
+  import { useMessage } from '/@/hooks/web/useMessage'
+  import { usePermission } from '/@/hooks/web/usePermission'
+  import { RoleEnum } from '/@/enums/roleEnum'
   import { List } from 'ant-design-vue'
+  import { uploadApi } from '/@/api/sys/upload'
+  import { useI18n } from '/@/hooks/web/useI18n'
+
+  const { t } = useI18n()
+
   export default defineComponent({
     components: {
+      BasicUpload,
       Icon,
       Progress,
       PageWrapper,
@@ -73,12 +106,39 @@
       [Col.name]: Col,
     },
     setup() {
+      const { createMessage } = useMessage()
+      const { hasPermission } = usePermission()
+
+      function getListOfPage(pageSize: number): any[] {
+        let listOfPage: any[] = []
+        for (let i = 0; i < cardList.length / pageSize; i++) {
+          listOfPage.push(cardList.slice(i * pageSize, (i + 1) * pageSize))
+        }
+        if (cardList.length % pageSize) {
+          listOfPage.push(cardList.slice((cardList.length / pageSize) * pageSize))
+        }
+        return listOfPage
+      }
+
       return {
+        t,
+        RoleEnum,
+        handleChange: (list: string[]) => {
+          createMessage.info(`已上传文件${JSON.stringify(list)}`)
+        },
+        uploadApi,
+        hasPermission,
         prefixCls: 'list-basic',
-        list: cardList,
+        getListOfPage: getListOfPage,
         pagination: {
+          current: 1,
+          total: cardList.length,
           show: true,
-          pageSize: 3,
+          pageSize: 10,
+          onChange: function (page: number, pageSize: number) {
+            this.current = page
+            this.pageSize = pageSize
+          },
         },
       }
     },
@@ -131,6 +191,7 @@
         display: inline-block;
         width: 40%;
         text-align: center;
+        vertical-align: top;
         div {
           display: inline-block;
           padding: 0 20px;

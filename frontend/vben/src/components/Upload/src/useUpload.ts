@@ -42,7 +42,7 @@ export function useUploadType({
 
     const accept = unref(acceptRef)
     if (accept.length > 0) {
-      helpTexts.push(t('component.upload.accept', [accept.join(',')]))
+      helpTexts.push(t('component.upload.accept', ['docx']))
     }
 
     const maxSize = unref(maxSizeRef)

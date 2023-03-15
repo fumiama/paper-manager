@@ -2,7 +2,7 @@ export default {
   footer: { onlinePreview: '在线预览', onlineDocument: '在线文档' },
   header: {
     // user dropdown
-    dropdownItemDoc: '文档',
+    dropdownItemSettings: '设置',
     dropdownItemLoginOut: '退出系统',
 
     // tooltip

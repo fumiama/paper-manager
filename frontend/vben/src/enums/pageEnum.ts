@@ -5,6 +5,8 @@ export enum PageEnum {
   BASE_HOME = '/dashboard',
   // file list path
   PAGE_FILELIST = '/filelist',
+  // personal settings path
+  PAGE_SETTINGS = '/settings',
   // error page path
   ERROR_PAGE = '/exception',
   // error log page path

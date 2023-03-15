@@ -1,8 +1,5 @@
 <template>
-  <Card title="最新动态" v-bind="$attrs">
-    <template #extra>
-      <a-button type="link" size="small">更多</a-button>
-    </template>
+  <Card title="我的消息" v-bind="$attrs">
     <List item-layout="horizontal" :data-source="dynamicInfoItems">
       <template #renderItem="{ item }">
         <ListItem>
@@ -16,6 +13,7 @@
               <Icon :icon="item.avatar" :size="30" />
             </template>
           </ListItemMeta>
+          <a-button ghost color="error">删除</a-button>
         </ListItem>
       </template>
     </List>

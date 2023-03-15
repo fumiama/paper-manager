@@ -12,12 +12,11 @@
     <template #overlay>
       <Menu @click="handleMenuClick">
         <MenuItem
-          key="doc"
-          :text="t('layout.header.dropdownItemDoc')"
-          icon="ion:document-text-outline"
-          v-if="getShowDoc"
+          key="settings"
+          :text="t('layout.header.dropdownItemSettings')"
+          icon="ion:settings-outline"
         />
-        <MenuDivider v-if="getShowDoc" />
+        <MenuDivider />
         <MenuItem
           key="logout"
           :text="t('layout.header.dropdownItemLoginOut')"
@@ -34,21 +33,19 @@
 
   import { defineComponent, computed } from 'vue'
 
-  import { DOC_URL } from '/@/settings/siteSetting'
-
   import { useUserStore } from '/@/store/modules/user'
-  import { useHeaderSetting } from '/@/hooks/setting/useHeaderSetting'
   import { useI18n } from '/@/hooks/web/useI18n'
   import { useDesign } from '/@/hooks/web/useDesign'
   import { useModal } from '/@/components/Modal'
 
   import headerImg from '/@/assets/images/header.jpg'
   import { propTypes } from '/@/utils/propTypes'
-  import { openWindow } from '/@/utils'
+  import { router } from '/@/router'
+  import { PageEnum } from '/@/enums/pageEnum'
 
   import { createAsyncComponent } from '/@/utils/factory/createAsyncComponent'
 
-  type MenuEvent = 'logout' | 'doc'
+  type MenuEvent = 'logout' | 'settings'
 
   export default defineComponent({
     name: 'UserDropdown',
@@ -64,7 +61,6 @@
     setup() {
       const { prefixCls } = useDesign('header-user-dropdown')
       const { t } = useI18n()
-      const { getShowDoc } = useHeaderSetting()
       const userStore = useUserStore()
 
       const getUserInfo = computed(() => {
@@ -79,18 +75,13 @@
         userStore.confirmLoginOut()
       }
 
-      // open doc
-      function openDoc() {
-        openWindow(DOC_URL)
-      }
-
       function handleMenuClick(e: MenuInfo) {
         switch (e.key as MenuEvent) {
           case 'logout':
             handleLoginOut()
             break
-          case 'doc':
-            openDoc()
+          case 'settings':
+            router.push(PageEnum.PAGE_SETTINGS)
             break
         }
       }
@@ -100,7 +91,6 @@
         t,
         getUserInfo,
         handleMenuClick,
-        getShowDoc,
         register,
       }
     },

@@ -1,3 +1,3 @@
 export default {
-  name: '文件列表',
+  name: '试卷库',
 }
