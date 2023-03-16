@@ -37,10 +37,9 @@
   import { useI18n } from '/@/hooks/web/useI18n'
   import { useDesign } from '/@/hooks/web/useDesign'
   import { useModal } from '/@/components/Modal'
-
+  import { useGo } from '/@/hooks/web/usePage'
   import headerImg from '/@/assets/images/header.jpg'
   import { propTypes } from '/@/utils/propTypes'
-  import { router } from '/@/router'
   import { PageEnum } from '/@/enums/pageEnum'
 
   import { createAsyncComponent } from '/@/utils/factory/createAsyncComponent'
@@ -61,6 +60,7 @@
     setup() {
       const { prefixCls } = useDesign('header-user-dropdown')
       const { t } = useI18n()
+      const go = useGo()
       const userStore = useUserStore()
 
       const getUserInfo = computed(() => {
@@ -81,7 +81,7 @@
             handleLoginOut()
             break
           case 'settings':
-            router.push(PageEnum.PAGE_SETTINGS)
+            go(PageEnum.PAGE_SETTINGS)
             break
         }
       }

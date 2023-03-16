@@ -1,5 +1,8 @@
 <template>
-  <PageWrapper title="带参数标签页" content="支持带参数多tab缓存">
+  <PageWrapper :title="t('routes.filelist.file')">
+    <template #headerContent>
+      <a-button type="primary"> 下载试卷 </a-button>
+    </template>
     <div ref="chartRef" :style="{ height, width }"></div>
     <div class="docxWrap" :style="{ width }">
       <div ref="docxRef"></div>
@@ -14,9 +17,12 @@
   import { renderAsync } from 'docx-preview'
   import { downloadFile } from '/@/api/page'
   import { DownloadFile } from '/@/api/page/model/fileModel'
-  import { router } from '/@/router'
+  import { useGo } from '/@/hooks/web/usePage'
   import { PageEnum } from '/@/enums/pageEnum'
+  import { useI18n } from '/@/hooks/web/useI18n'
   import axios from 'axios'
+
+  const { t } = useI18n()
 
   let docxRef = ref(null)
 
@@ -36,7 +42,7 @@
   }
 
   export default defineComponent({
-    name: 'TestTab',
+    name: 'PaperAnalyzeTab',
     components: { PageWrapper },
     props: {
       width: {
@@ -50,13 +56,14 @@
     },
     setup() {
       const { currentRoute } = useRouter()
+      const go = useGo()
 
       const params = computed(() => {
         return unref(currentRoute).params
       })
 
       if (!params.value || !params.value.id) {
-        router.push(PageEnum.ERROR_PAGE)
+        go(PageEnum.ERROR_PAGE)
       }
 
       downloadFile(Number(params.value.id)).then((file: DownloadFile) => {
@@ -94,7 +101,7 @@
               left: '2%',
               top: '1%',
               textStyle: {
-                fontSize: 36,
+                fontSize: 20,
               },
             },
             {
@@ -102,7 +109,7 @@
               left: '40%',
               top: '1%',
               textStyle: {
-                fontSize: 36,
+                fontSize: 20,
               },
             },
             {
@@ -110,7 +117,7 @@
               left: '2%',
               top: '50%',
               textStyle: {
-                fontSize: 36,
+                fontSize: 20,
               },
             },
           ],
@@ -188,6 +195,7 @@
         })
       })
       return {
+        t,
         chartRef,
         docxRef,
       }

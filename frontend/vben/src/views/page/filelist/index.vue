@@ -41,7 +41,13 @@
               <template #title>
                 <span>{{ item.title }}</span>
                 <div class="extra">
-                  <a-button color="success" :disabled="item.percent < 100"> 查阅 </a-button>
+                  <a-button
+                    color="success"
+                    :disabled="item.percent < 100"
+                    @click="openFile(item.id)"
+                  >
+                    查阅
+                  </a-button>
                   &nbsp;&nbsp;
                   <a-button
                     color="warning"
@@ -111,6 +117,8 @@
   import { uploadApi } from '/@/api/sys/upload'
   import { useI18n } from '/@/hooks/web/useI18n'
   import { delFile, analyzeFile } from '/@/api/page'
+  import { useGo } from '/@/hooks/web/usePage'
+  import { PageEnum } from '/@/enums/pageEnum'
 
   const { t } = useI18n()
   const { createMessage } = useMessage()
@@ -163,6 +171,11 @@
     },
     setup() {
       const { hasPermission } = usePermission()
+      const go = useGo()
+
+      function openFile(id: number) {
+        go(PageEnum.PAGE_FILELIST + '/file/' + id)
+      }
 
       return {
         t,
@@ -174,6 +187,7 @@
         hasPermission,
         prefixCls: 'list-basic',
         getListOfPage,
+        openFile,
         deleteFile,
         analyzeFile: analFile,
         cardList,
