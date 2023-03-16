@@ -80,6 +80,7 @@
 </template>
 <script lang="ts" setup>
   import { reactive, ref, unref, computed } from 'vue'
+  import md5 from 'md5'
 
   import { Checkbox, Form, Input, Row, Col, Button } from 'ant-design-vue'
   import LoginFormTitle from './LoginFormTitle.vue'
@@ -88,6 +89,7 @@
   import { useMessage } from '/@/hooks/web/useMessage'
 
   import { useUserStore } from '/@/store/modules/user'
+  import { getLoginSalt } from '/@/api/sys/user'
   import { LoginStateEnum, useLoginState, useFormRules, useFormValid } from './useLogin'
   import { useDesign } from '/@/hooks/web/useDesign'
   // import { onKeyStroke } from '@vueuse/core'
@@ -124,8 +126,9 @@
     if (!data) return
     try {
       loading.value = true
+      const { salt } = await getLoginSalt(data.account)
       const userInfo = await userStore.login({
-        password: data.password,
+        password: md5(data.password + salt),
         username: data.account,
         mode: 'none', //不要默认的错误提示
       })

@@ -1,4 +1,5 @@
 import { MockMethod } from 'vite-plugin-mock'
+import md5 from 'md5'
 import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
 
 export function createFakeUserList() {
@@ -60,6 +61,14 @@ const fakeCodeList: any = {
   '2': ['2000', '4000', '6000'],
 }
 export default [
+  {
+    url: '/api/getLoginSalt',
+    timeout: 200,
+    method: 'get',
+    response: () => {
+      return resultSuccess({ salt: 'nc8w9f82hfioq2ci9hcwehcq' })
+    },
+  },
   // mock user login
   {
     url: '/api/login',
@@ -68,7 +77,9 @@ export default [
     response: ({ body }) => {
       const { username, password } = body
       const checkUser = createFakeUserList().find(
-        (item) => item.username === username && password === item.password,
+        (item) =>
+          item.username === username &&
+          password === md5(item.password + 'nc8w9f82hfioq2ci9hcwehcq'),
       )
       if (!checkUser) {
         return resultError('Incorrect account or password!')

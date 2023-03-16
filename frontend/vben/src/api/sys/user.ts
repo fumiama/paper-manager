@@ -7,11 +7,13 @@ import {
   RegisterParams,
   ResetPasswordResultModel,
   RegisterResultModel,
+  GetLoginSaltModel,
 } from './model/userModel'
 
 import { ErrorMessageMode } from '/#/axios'
 
 enum Api {
+  GetLoginSalt = '/getLoginSalt',
   Login = '/login',
   Logout = '/logout',
   ResetPassword = '/resetPassword',
@@ -64,6 +66,13 @@ export function registerApi(params: RegisterParams, mode: ErrorMessageMode = 'mo
       errorMessageMode: mode,
     },
   )
+}
+
+/**
+ * @description: getLoginSalt
+ */
+export function getLoginSalt(username: string) {
+  return defHttp.get<GetLoginSaltModel>({ url: Api.GetLoginSalt, params: { username: username } })
 }
 
 /**

@@ -67,3 +67,7 @@ export interface GetUserInfoModel {
   // 介绍
   desc?: string
 }
+
+export interface GetLoginSaltModel {
+  salt: string
+}
