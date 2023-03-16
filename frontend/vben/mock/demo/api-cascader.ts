@@ -311,7 +311,7 @@ const areaList: any[] = [
 ]
 export default [
   {
-    url: '/basic-api/cascader/getAreaRecord',
+    url: '/api/cascader/getAreaRecord',
     timeout: 1000,
     method: 'post',
     response: ({ body }) => {

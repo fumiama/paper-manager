@@ -1,11 +1,13 @@
 import { defHttp } from '/@/utils/http/axios'
 import { getFileListModel, FilePercent, DelFile, AnalyzeFile } from './model/fileListModel'
+import { DownloadFile } from './model/fileModel'
 
 enum Api {
   GetFileList = '/getFileList',
   GetFilePercent = '/getFilePercent',
   DelFile = '/delFile',
   AnalyzeFile = '/analyzeFile',
+  DlFile = '/dlFile',
 }
 
 /**
@@ -34,4 +36,11 @@ export const delFile = (id: number) => {
  */
 export const analyzeFile = (id: number) => {
   return defHttp.get<AnalyzeFile>({ url: Api.AnalyzeFile, params: { id: id } })
+}
+
+/**
+ * @description: Download file
+ */
+export const downloadFile = (id: number) => {
+  return defHttp.get<DownloadFile>({ url: Api.DlFile, params: { id: id } })
 }

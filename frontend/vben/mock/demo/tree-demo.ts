@@ -26,7 +26,7 @@ const demoTreeList = (keyword: string) => {
 
 export default [
   {
-    url: '/basic-api/tree/getDemoOptions',
+    url: '/api/tree/getDemoOptions',
     timeout: 1000,
     method: 'get',
     response: ({ query }) => {

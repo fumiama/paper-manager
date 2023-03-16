@@ -26,7 +26,7 @@ function createFileList() {
 export default [
   // mock get filelist
   {
-    url: '/basic-api/getFileList',
+    url: '/api/getFileList',
     timeout: 200,
     method: 'get',
     response: (request: requestParams) => {
@@ -42,7 +42,7 @@ export default [
     },
   },
   {
-    url: '/basic-api/getFilePercent',
+    url: '/api/getFilePercent',
     timeout: 200,
     method: 'get',
     response: (request: requestParams) => {
@@ -71,7 +71,7 @@ export default [
     },
   },
   {
-    url: '/basic-api/delFile',
+    url: '/api/delFile',
     timeout: 200,
     method: 'get',
     response: (request: requestParams) => {
@@ -86,7 +86,7 @@ export default [
     },
   },
   {
-    url: '/basic-api/analyzeFile',
+    url: '/api/analyzeFile',
     timeout: 1000,
     method: 'get',
     response: (request: requestParams) => {
