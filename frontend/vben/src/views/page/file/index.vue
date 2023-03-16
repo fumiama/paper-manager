@@ -1,7 +1,7 @@
 <template>
-  <PageWrapper :title="t('routes.filelist.file')">
+  <PageWrapper :title="t('routes.filelist.file') + ': ' + docxNameRef">
     <template #headerContent>
-      <a-button type="primary" @click="downloadDocx"> 下载试卷 </a-button>
+      <a-button type="primary" @click="downloadDocx"> 下载试卷 ({{ docxSizeRef }}MB) </a-button>
     </template>
     <div ref="chartRef" :style="{ height, width }"></div>
     <div class="docxWrap" :style="{ width }">
@@ -10,14 +10,15 @@
   </PageWrapper>
 </template>
 <script lang="ts">
-  import { computed, defineComponent, unref, PropType, ref, Ref, onMounted } from 'vue'
+  import { computed, defineComponent, unref, PropType, ref, Ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { PageWrapper } from '/@/components/Page'
   import { useECharts } from '/@/hooks/web/useECharts'
   import { renderAsync } from 'docx-preview'
-  import { downloadFile } from '/@/api/page'
-  import { DownloadFile } from '/@/api/page/model/fileModel'
+  import { downloadFile, getFileStatus } from '/@/api/page'
+  import { useMessage } from '/@/hooks/web/useMessage'
   import { useGo } from '/@/hooks/web/usePage'
+  import { useTabs } from '/@/hooks/web/useTabs'
   import { PageEnum } from '/@/enums/pageEnum'
   import { useI18n } from '/@/hooks/web/useI18n'
   import { downloadByData } from '/@/utils/file/download'
@@ -26,6 +27,9 @@
   const { t } = useI18n()
 
   let docxRef = ref(null)
+
+  let docxNameRef = ref('paper.docx')
+  let docxSizeRef = ref(0)
 
   let docxBlob: Blob | null = null
 
@@ -46,7 +50,7 @@
   }
 
   function downloadDocx() {
-    downloadByData(docxBlob as BlobPart, 'testName.docx')
+    downloadByData(docxBlob as BlobPart, docxNameRef.value)
   }
 
   export default defineComponent({
@@ -64,6 +68,8 @@
     },
     setup() {
       const { currentRoute } = useRouter()
+      const { createMessage } = useMessage()
+      const { closeCurrent } = useTabs()
       const go = useGo()
 
       const params = computed(() => {
@@ -72,141 +78,167 @@
 
       if (!params.value || !params.value.id) {
         go(PageEnum.ERROR_PAGE)
+        closeCurrent()
       }
 
-      downloadFile(Number(params.value.id)).then((file: DownloadFile) => {
-        if (file && file.url) {
-          axios({
-            method: 'get',
-            responseType: 'blob',
-            url: file.url,
-          }).then(({ data }) => {
-            loadDocx(data)
-          })
-        } else go(PageEnum.ERROR_PAGE)
-      })
+      ;(async () => {
+        try {
+          const ret = await downloadFile(Number(params.value.id))
+          if (ret && ret.url) {
+            const { data } = await axios({
+              method: 'get',
+              responseType: 'blob',
+              url: ret.url,
+            })
+            if (data) {
+              loadDocx(data)
+              return
+            }
+          }
+          go(PageEnum.ERROR_PAGE)
+          closeCurrent()
+        } catch (error) {
+          createMessage.error('加载docx错误: ' + (error as unknown as Error).message)
+          go(PageEnum.ERROR_PAGE)
+          closeCurrent()
+        }
+      })()
 
       const chartRef = ref<HTMLDivElement | null>(null)
       const { setOptions } = useECharts(chartRef as Ref<HTMLDivElement>)
-      const dataAll = [389, 259, 262, 324, 232, 176, 196, 214, 133, 370]
-      const yAxisData = [
-        '原因1',
-        '原因2',
-        '原因3',
-        '原因4',
-        '原因5',
-        '原因6',
-        '原因7',
-        '原因8',
-        '原因9',
-        '原因10',
-      ]
-      onMounted(() => {
-        setOptions({
-          title: [
-            {
-              text: '题量占比',
-              left: '2%',
-              top: '1%',
-              textStyle: {
-                fontSize: 20,
-              },
-            },
-            {
-              text: '重复率前十',
-              left: '40%',
-              top: '1%',
-              textStyle: {
-                fontSize: 20,
-              },
-            },
-            {
-              text: '分数占比',
-              left: '2%',
-              top: '50%',
-              textStyle: {
-                fontSize: 20,
-              },
-            },
-          ],
-          grid: [{ left: '50%', top: '7%', width: '45%', height: '90%' }],
-          tooltip: {
-            formatter: '{b} ({c})',
-          },
-          xAxis: [
-            {
-              gridIndex: 0,
-              axisTick: { show: false },
-              axisLabel: { show: false },
-              splitLine: { show: false },
-              axisLine: { show: false },
-            },
-          ],
-          yAxis: [
-            {
-              gridIndex: 0,
-              interval: 0,
-              data: yAxisData.reverse(),
-              axisTick: { show: false },
-              axisLabel: { show: true },
-              splitLine: { show: false },
-              axisLine: { show: true },
-            },
-          ],
-          series: [
-            {
-              name: '各渠道投诉占比',
-              type: 'pie',
-              radius: '30%',
-              center: ['22%', '25%'],
-              data: [
-                { value: 335, name: '客服电话' },
-                { value: 310, name: '奥迪官网' },
-                { value: 234, name: '媒体曝光' },
-                { value: 135, name: '质检总局' },
-                { value: 105, name: '其他' },
+
+      ;(async () => {
+        try {
+          const ret = await getFileStatus(Number(params.value.id))
+          if (ret && ret.duplications.length > 0 && ret.questions.length > 0) {
+            docxNameRef.value = ret.name
+            docxSizeRef.value = ret.size
+            const barNames = ret.duplications.map((value) => {
+              return value.name
+            })
+            const barData = ret.duplications.map((value) => {
+              return value.percent
+            })
+            const queData = ret.questions.map((value) => {
+              return { value: value.count, name: value.name }
+            })
+            const ptData = ret.questions.map((value) => {
+              return { value: value.point, name: value.name }
+            })
+            setOptions({
+              title: [
+                {
+                  text: '题量占比',
+                  left: '2%',
+                  top: '1%',
+                  textStyle: {
+                    fontSize: 20,
+                  },
+                },
+                {
+                  text: '重复率前十',
+                  left: '40%',
+                  top: '1%',
+                  textStyle: {
+                    fontSize: 20,
+                  },
+                },
+                {
+                  text: '分数占比',
+                  left: '2%',
+                  top: '50%',
+                  textStyle: {
+                    fontSize: 20,
+                  },
+                },
               ],
-              labelLine: { show: false },
-              label: {
-                show: true,
-                formatter: '{b} \n ({d}%)',
+              grid: [{ left: '50%', top: '7%', width: '45%', height: '90%' }],
+              tooltip: {
+                formatter: '{b} ({c})',
               },
-            },
-            {
-              name: '各级别投诉占比',
-              type: 'pie',
-              radius: '30%',
-              center: ['22%', '75%'],
-              labelLine: { show: false },
-              data: [
-                { value: 335, name: 'A级' },
-                { value: 310, name: 'B级' },
-                { value: 234, name: 'C级' },
-                { value: 135, name: 'D级' },
+              xAxis: [
+                {
+                  gridIndex: 0,
+                  axisTick: { show: false },
+                  axisLabel: { show: false },
+                  splitLine: { show: false },
+                  axisLine: { show: false },
+                },
               ],
-              label: {
-                show: true,
-                formatter: '{b} \n ({d}%)',
-              },
-            },
-            {
-              name: '投诉原因TOP10',
-              type: 'bar',
-              xAxisIndex: 0,
-              yAxisIndex: 0,
-              barWidth: '45%',
-              itemStyle: { color: '#86c9f4' },
-              label: { show: true, position: 'right' },
-              data: dataAll.sort(),
-            },
-          ],
-        })
-      })
+              yAxis: [
+                {
+                  gridIndex: 0,
+                  interval: 0,
+                  data: barNames,
+                  axisTick: { show: false },
+                  axisLabel: { show: true },
+                  splitLine: { show: false },
+                  axisLine: { show: true },
+                },
+              ],
+              series: [
+                {
+                  name: '题量占比',
+                  type: 'pie',
+                  radius: '30%',
+                  center: ['22%', '25%'],
+                  data: queData,
+                  labelLine: { show: false },
+                  label: {
+                    show: true,
+                    formatter: function (d) {
+                      return d.name + '(' + d.value + ')'
+                    },
+                  },
+                },
+                {
+                  name: '分数占比',
+                  type: 'pie',
+                  radius: '30%',
+                  center: ['22%', '75%'],
+                  labelLine: { show: false },
+                  data: ptData,
+                  label: {
+                    show: true,
+                    formatter: '{b}\n　　({d}%)　',
+                  },
+                },
+                {
+                  name: '重复率前十',
+                  type: 'bar',
+                  xAxisIndex: 0,
+                  yAxisIndex: 0,
+                  barWidth: '45%',
+                  itemStyle: { color: '#86c9f4' },
+                  label: {
+                    show: true,
+                    position: 'right',
+                    formatter: function (d) {
+                      return d.data + '%'
+                    },
+                  },
+                  data: barData,
+                },
+              ],
+            })
+            return
+          }
+          go(PageEnum.ERROR_PAGE)
+          closeCurrent()
+        } catch (error) {
+          createMessage.error('加载分析数据错误: ' + (error as unknown as Error).message)
+          go(PageEnum.ERROR_PAGE)
+          closeCurrent()
+        }
+      })()
+
       return {
         t,
         chartRef,
         docxRef,
         downloadDocx,
+        docxNameRef,
+        docxSizeRef,
       }
     },
   })
