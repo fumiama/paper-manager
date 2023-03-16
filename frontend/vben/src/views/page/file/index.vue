@@ -83,7 +83,7 @@
           }).then(({ data }) => {
             loadDocx(data)
           })
-        }
+        } else go(PageEnum.ERROR_PAGE)
       })
 
       const chartRef = ref<HTMLDivElement | null>(null)

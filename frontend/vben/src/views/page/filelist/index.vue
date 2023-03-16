@@ -118,7 +118,6 @@
   import { useI18n } from '/@/hooks/web/useI18n'
   import { delFile, analyzeFile } from '/@/api/page'
   import { useGo } from '/@/hooks/web/usePage'
-  import { PageEnum } from '/@/enums/pageEnum'
 
   const { t } = useI18n()
   const { createMessage } = useMessage()
@@ -174,7 +173,7 @@
       const go = useGo()
 
       function openFile(id: number) {
-        go(PageEnum.PAGE_FILELIST + '/file/' + id)
+        go({ name: 'FilePage', params: { id } })
       }
 
       return {
