@@ -1,7 +1,7 @@
 <template>
   <PageWrapper :title="t('routes.filelist.file')">
     <template #headerContent>
-      <a-button type="primary"> 下载试卷 </a-button>
+      <a-button type="primary" @click="downloadDocx"> 下载试卷 </a-button>
     </template>
     <div ref="chartRef" :style="{ height, width }"></div>
     <div class="docxWrap" :style="{ width }">
@@ -20,13 +20,17 @@
   import { useGo } from '/@/hooks/web/usePage'
   import { PageEnum } from '/@/enums/pageEnum'
   import { useI18n } from '/@/hooks/web/useI18n'
+  import { downloadByData } from '/@/utils/file/download'
   import axios from 'axios'
 
   const { t } = useI18n()
 
   let docxRef = ref(null)
 
+  let docxBlob: Blob | null = null
+
   function loadDocx(file: Blob) {
+    docxBlob = file
     renderAsync(file, docxRef.value as unknown as HTMLElement, undefined, {
       className: 'docx', // 默认和文档样式类的类名/前缀
       inWrapper: false, // 启用围绕文档内容渲染包装器
@@ -39,6 +43,10 @@
       trimXmlDeclaration: true, // 如果为真，xml声明将在解析之前从xml文档中删除
       debug: false, // 启用额外的日志记录
     })
+  }
+
+  function downloadDocx() {
+    downloadByData(docxBlob as BlobPart, 'testName.docx')
   }
 
   export default defineComponent({
@@ -198,6 +206,7 @@
         t,
         chartRef,
         docxRef,
+        downloadDocx,
       }
     },
   })
