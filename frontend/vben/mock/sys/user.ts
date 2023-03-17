@@ -143,7 +143,7 @@ export default [
       return resultSuccess(codeList)
     },
   },
-  {
+  /*{
     url: '/api/logout',
     timeout: 200,
     method: 'get',
@@ -156,13 +156,13 @@ export default [
       }
       return resultSuccess(undefined, { message: 'Token has been destroyed' })
     },
-  },
-  {
+  },*/
+  /*{
     url: '/api/testRetry',
     statusCode: 405,
     method: 'get',
     response: () => {
       return resultError('Error!')
     },
-  },
+  },*/
 ] as MockMethod[]

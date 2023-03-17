@@ -8,8 +8,8 @@
         <div class="change-avatar">
           <div class="mb-2">头像</div>
           <CropperAvatar
-            :uploadApi="uploadApi"
-            :value="avatar"
+            :uploadApi="onUpload as any"
+            :value="avatarRef"
             btnText="更换头像"
             :btnProps="{ preIcon: 'ant-design:cloud-upload-outlined' }"
             @change="updateAvatar"
@@ -23,7 +23,7 @@
 </template>
 <script lang="ts">
   import { Button, Row, Col } from 'ant-design-vue'
-  import { computed, defineComponent, onMounted } from 'vue'
+  import { ref, defineComponent, onMounted } from 'vue'
   import { BasicForm, useForm } from '/@/components/Form/index'
   import { CollapseContainer } from '/@/components/Container'
   import { CropperAvatar } from '/@/components/Cropper'
@@ -31,7 +31,6 @@
   import { useMessage } from '/@/hooks/web/useMessage'
 
   import headerImg from '/@/assets/images/header.jpg'
-  import { accountInfoApi } from '/@/api/demo/account'
   import { baseSetschemas } from './data'
   import { useUserStore } from '/@/store/modules/user'
   import { uploadApi } from '/@/api/sys/upload'
@@ -48,6 +47,7 @@
     setup() {
       const { createMessage } = useMessage()
       const userStore = useUserStore()
+      const { avatar } = userStore.getUserInfo
 
       const [register, { setFieldsValue }] = useForm({
         labelWidth: 120,
@@ -56,27 +56,36 @@
       })
 
       onMounted(async () => {
-        const data = await accountInfoApi()
+        const data = userStore.getUserInfo
         setFieldsValue(data)
       })
 
-      const avatar = computed(() => {
-        const { avatar } = userStore.getUserInfo
-        console.log(avatar)
-        return avatar || headerImg
-      })
+      const avatarRef = ref(avatar || headerImg)
 
-      function updateAvatar({ src, data }) {
+      function updateAvatar({ src }) {
         const userinfo = userStore.getUserInfo
         userinfo.avatar = src
         userStore.setUserInfo(userinfo)
-        console.log('data', data)
+      }
+
+      async function onUpload(value: { file: Blob; name: string }) {
+        const data = userStore.getUserInfo
+        const result = await uploadApi(
+          {
+            name: 'avatar',
+            file: value.file,
+            filename: data.username,
+          },
+          () => {},
+        )
+        avatarRef.value = result.data.url
+        return result
       }
 
       return {
-        avatar,
+        avatarRef,
         register,
-        uploadApi: uploadApi as any,
+        onUpload,
         updateAvatar,
         handleSubmit: () => {
           createMessage.success('更新成功！')

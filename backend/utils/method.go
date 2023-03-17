@@ -18,7 +18,7 @@ func IP(r *http.Request) string {
 // IsMethod check if the method meets the requirement
 // and response 405 Method Not Allowed if not matched
 func IsMethod(m string, w http.ResponseWriter, r *http.Request) bool {
-	logrus.Infoln("[utils.IsMethod]\t accept", IP(r), r.Method, r.URL)
+	logrus.Infoln("[utils.IsMethod] accept", IP(r), r.Method, r.URL)
 	if r.Method != m {
 		http.Error(w, "405 Method Not Allowed", http.StatusMethodNotAllowed)
 		return false

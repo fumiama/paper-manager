@@ -30,6 +30,9 @@ export interface UserInfo {
   desc?: string
   homePath?: string
   roles: RoleInfo[]
+  date: string
+  last: string
+  contact: string
 }
 
 export interface BeforeMiniState {

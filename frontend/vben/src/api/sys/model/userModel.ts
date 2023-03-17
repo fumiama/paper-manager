@@ -66,6 +66,12 @@ export interface GetUserInfoModel {
   avatar: string
   // 介绍
   desc?: string
+  // 创建日期
+  date: string
+  // 上次修改密码日期
+  last: string
+  // 电话
+  contact: string
 }
 
 export interface GetLoginSaltModel {

@@ -9,13 +9,16 @@ import (
 
 // Handler serves all backend /api call
 func Handler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path[0] != '/' {
+		r.URL.Path = "/" + r.URL.Path
+	}
 	if r.URL.Path == "/api/getLoginSalt" {
 		if !utils.IsMethod("GET", w, r) {
 			return
 		}
 		username := r.URL.Query().Get("username")
 		if username == "" {
-			http.Error(w, "400 Bad Request: empty username", http.StatusBadRequest)
+			writeresult(w, codeError, nil, "empty username", typeError)
 			return
 		}
 		salt, err := getLoginSalt(username)
@@ -56,6 +59,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeresult(w, codeSuccess, r, messageOk, typeSuccess)
+		return
+	}
+	if r.URL.Path == "/api/logout" {
+		if !utils.IsMethod("GET", w, r) {
+			return
+		}
+		err := logout(r.Header.Get("Authorization"))
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
 		return
 	}
 	if !utils.IsMethod("GET", w, r) {

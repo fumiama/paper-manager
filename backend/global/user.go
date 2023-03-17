@@ -56,6 +56,7 @@ var (
 	ErrEmptyUserID       = errors.New("empty user ID")
 	ErrEmptyContect      = errors.New("empty contact")
 	ErrUsernameExists    = errors.New("username exists")
+	ErrInvalidName       = errors.New("invalid name")
 )
 
 func init() {
@@ -88,7 +89,7 @@ func init() {
 			Cont: "028-61830156",
 			Desc: "日は山の端にかかりぬ",
 		}, "系统")
-		logrus.Warn("[global.user] 初次启动, 创建初始账户 fumiama 密码 123456")
+		logrus.Warn("[user] 初次启动, 创建初始账户 fumiama 密码 123456")
 	}
 }
 
@@ -121,6 +122,11 @@ func (u *UserDatabase) AddUser(user *User, opname string) error {
 	if u.IsNameExists(user.Name) {
 		return ErrUsernameExists
 	}
+	for _, c := range user.Name {
+		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
+			return ErrInvalidName
+		}
+	}
 	user.Date = time.Now().Unix()
 	user.Last = user.Date
 	_ = u.notifyUserAdded(opname, user.Name)
@@ -146,7 +152,7 @@ func (u *UserDatabase) UpdateUserInfo(id int, nick, avtr, desc string) error {
 	}
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, user)
+	return u.db.Insert(UserTableUser, &user)
 }
 
 // UpdateUserRole ...
@@ -161,7 +167,7 @@ func (u *UserDatabase) UpdateUserRole(id int, nr UserRole) error {
 	user.Role = nr
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, user)
+	return u.db.Insert(UserTableUser, &user)
 }
 
 // UpdateUserPassword ...
@@ -178,7 +184,7 @@ func (u *UserDatabase) UpdateUserPassword(id int, npwd string) error {
 	_ = u.notifyPasswordChange(user.Name, npwd)
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, user)
+	return u.db.Insert(UserTableUser, &user)
 }
 
 // UpdateUserContact ...
@@ -194,12 +200,18 @@ func (u *UserDatabase) UpdateUserContact(id int, ncont string) error {
 	_ = u.notifyContactChange(user.Name, ncont)
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, user)
+	return u.db.Insert(UserTableUser, &user)
 }
 
 // GetUserByName avoids sql injection by removing ; ' " =
 func (u *UserDatabase) GetUserByName(username string) (user User, err error) {
 	username = strings.NewReplacer(";", "", "'", "", `"`, "", "=", "").Replace(username)
+	for _, c := range username {
+		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
+			err = ErrInvalidName
+			return
+		}
+	}
 	u.mu.RLock()
 	err = u.db.Find(UserTableUser, &user, "WHERE Name='"+username+"'")
 	u.mu.RUnlock()
@@ -209,6 +221,11 @@ func (u *UserDatabase) GetUserByName(username string) (user User, err error) {
 // IsNameExists avoids sql injection by removing ; ' " =
 func (u *UserDatabase) IsNameExists(username string) bool {
 	username = strings.NewReplacer(";", "", "'", "", `"`, "", "=", "").Replace(username)
+	for _, c := range username {
+		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
+			return false
+		}
+	}
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 	return u.db.CanFind(UserTableUser, "WHERE Name='"+username+"'")
@@ -265,6 +282,21 @@ func (u *UserDatabase) GetSuperIDs() (ids []int, err error) {
 	return
 }
 
+// IsUser checks if token is valid for a user
+func (user *User) IsUser() bool {
+	return user.Role == RoleUser || user.Role == RoleFileManager || user.Role == RoleSuper
+}
+
+// IsFileManager checks if token is valid for a filemgr
+func (user *User) IsFileManager() bool {
+	return user.Role == RoleFileManager || user.Role == RoleSuper
+}
+
+// IsSuper checks if token is valid for a super
+func (user *User) IsSuper() bool {
+	return user.Role == RoleSuper
+}
+
 // Message is shown in the workbench
 type Message struct {
 	ID   *int
@@ -282,13 +314,18 @@ func (u *UserDatabase) SendMessage(m *Message) error {
 	m.Date = time.Now().Unix()
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return u.db.InsertUnique(UserTableMessage, &m)
+	return u.db.InsertUnique(UserTableMessage, m)
 }
 
 // NotifyRegister will send register notification to all supers
 func (u *UserDatabase) NotifyRegister(name, cont, pswd string) error {
 	if name == "" {
 		return ErrEmptyName
+	}
+	for _, c := range name {
+		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
+			return ErrInvalidName
+		}
 	}
 	if pswd == "" {
 		return ErrEmptyPassword

@@ -23,14 +23,28 @@
   import { List } from 'ant-design-vue'
   import { defineComponent } from 'vue'
   import { CollapseContainer } from '/@/components/Container/index'
-
-  import { secureSettingList } from './data'
+  import { useUserStore } from '/@/store/modules/user'
 
   export default defineComponent({
     components: { CollapseContainer, List, ListItem: List.Item, ListItemMeta: List.Item.Meta },
     setup() {
+      const userStore = useUserStore()
+      const { last, contact } = userStore.getUserInfo
       return {
-        list: secureSettingList,
+        list: [
+          {
+            key: '1',
+            title: '账户密码',
+            description: '上次修改密码: ' + last,
+            extra: '修改',
+          },
+          {
+            key: '2',
+            title: '我的手机',
+            description: '已绑定手机: ' + contact,
+            extra: '修改',
+          },
+        ],
       }
     },
   })

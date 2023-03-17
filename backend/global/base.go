@@ -22,7 +22,7 @@ func init() {
 func initdir(folder string) {
 	err := os.MkdirAll(folder, 0755)
 	if err != nil {
-		logrus.Errorln("[os.MkdirAll]\t", err)
+		logrus.Errorln("[os.MkdirAll]", err)
 		os.Exit(line())
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/fumiama/paper-manager/backend/api"
-	"github.com/fumiama/paper-manager/backend/file"
 )
 
 func line() int {
@@ -26,14 +25,15 @@ func main() {
 	flag.Parse()
 	l, err := net.Listen("tcp", *addr)
 	if err != nil {
-		logrus.Errorln("[net.Listen]\t", err)
+		logrus.Errorln("[net.Listen]", err)
 		os.Exit(line())
 	}
 
 	http.HandleFunc("/api/", api.Handler)
-	http.HandleFunc("/file/", file.Handler)
+	http.HandleFunc("/file/", api.FileHandler)
+	http.HandleFunc("/upload", api.UploadHandler)
 
-	logrus.Infoln("[http.Serve]\t start at", l.Addr())
-	logrus.Errorln("[http.Serve]\t", http.Serve(l, nil))
+	logrus.Infoln("[http.Serve] start at", l.Addr())
+	logrus.Errorln("[http.Serve]", http.Serve(l, nil))
 	os.Exit(line())
 }

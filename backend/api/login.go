@@ -52,8 +52,11 @@ func getLoginSalt(username string) (*saltinfo, error) {
 		return nil, errNoSuchUser
 	}
 	s, _ := loginstatus.Load(username)
-	if s != loginStatusNo {
+	if s == loginStatusYes {
 		return nil, errInvalidLoginStatus
+	}
+	if s >= loginStatusFailLast {
+		return nil, errTooManyFailedLogins
 	}
 	salt := loginsalts.Get(username)
 	if salt.count != nil {
