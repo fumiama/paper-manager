@@ -1,5 +1,4 @@
 import { MockMethod } from 'vite-plugin-mock'
-import md5 from 'md5'
 import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
 
 export function createFakeUserList() {
@@ -61,26 +60,22 @@ const fakeCodeList: any = {
   '2': ['2000', '4000', '6000'],
 }
 export default [
-  {
+  /*{
     url: '/api/getLoginSalt',
     timeout: 200,
     method: 'get',
     response: () => {
       return resultSuccess({ salt: 'nc8w9f82hfioq2ci9hcwehcq' })
     },
-  },
+  },*/
   // mock user login
-  {
+  /*{
     url: '/api/login',
     timeout: 200,
     method: 'post',
     response: ({ body }) => {
-      const { username, password } = body
-      const checkUser = createFakeUserList().find(
-        (item) =>
-          item.username === username &&
-          password === md5(item.password + 'nc8w9f82hfioq2ci9hcwehcq'),
-      )
+      const { username } = body
+      const checkUser = createFakeUserList().find((item) => item.username === username)
       if (!checkUser) {
         return resultError('Incorrect account or password!')
       }
@@ -94,7 +89,7 @@ export default [
         desc,
       })
     },
-  },
+  },*/
   // mock reset password
   {
     url: '/api/resetPassword',
@@ -119,19 +114,19 @@ export default [
       })
     },
   },
-  {
+  /*{
     url: '/api/getUserInfo',
     method: 'get',
     response: (request: requestParams) => {
       const token = getRequestToken(request)
       if (!token) return resultError('Invalid token')
-      const checkUser = createFakeUserList().find((item) => item.token === token)
+      const checkUser = createFakeUserList()[0]
       if (!checkUser) {
         return resultError('The corresponding user information was not obtained!')
       }
       return resultSuccess(checkUser)
     },
-  },
+  },*/
   {
     url: '/api/getPermCode',
     timeout: 200,
