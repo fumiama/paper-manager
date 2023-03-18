@@ -144,5 +144,5 @@ func setUserInfo(id int, nick, desc, avtr *string) error {
 	if a == user.Avtr {
 		a = ""
 	}
-	return global.UserDB.UpdateUserInfo(id, n, d, a)
+	return global.UserDB.UpdateUserInfo(id, n, a, d)
 }
