@@ -31,8 +31,12 @@
 ![login screen](https://user-images.githubusercontent.com/41315874/226117983-c1e69916-def0-4746-939a-5041412b755f.png)
 
 ### 注销
+
+<img align="right" src="https://user-images.githubusercontent.com/41315874/226120744-a9c6e681-12f6-495e-b5a0-341e0e58497e.png" alt="logout" />
+
 该功能位于右上角状态栏头像的下拉列表中，点击`退出系统`后即可注销登录。
 > 注销时将访问`/api/logout`
+
 ### 仪表板/分析页 /dashboard/analysis
 
 ### 仪表板/工作台 /dashboard/workbench
