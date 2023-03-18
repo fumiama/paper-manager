@@ -17,7 +17,7 @@
 #### 注册
 点击`注册`后填写用户名、手机号与密码，再点击`注册`，即可将注册消息报告给课程组长，由课程组长电话联系确认无误后，在系统中创建相应账号。
 
-![login screen](https://user-images.githubusercontent.com/41315874/226117579-21ec0afa-eabe-43fe-b2a2-fe8833a312a1.png)
+![login screen](https://user-images.githubusercontent.com/41315874/226117983-c1e69916-def0-4746-939a-5041412b755f.png)
 
 ### 仪表板/分析页
 > /dashboard/analysis
