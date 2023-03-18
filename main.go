@@ -29,7 +29,7 @@ func main() {
 		os.Exit(line())
 	}
 
-	http.HandleFunc("/api/", backend.Handler)
+	http.HandleFunc("/api/", backend.APIHandler)
 	http.HandleFunc("/file/", backend.FileHandler)
 	http.HandleFunc("/upload", backend.UploadHandler)
 

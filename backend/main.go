@@ -179,8 +179,8 @@ func init() {
 	}}
 }
 
-// Handler serves all backend /api call
-func Handler(w http.ResponseWriter, r *http.Request) {
+// APIHandler serves all backend /api call
+func APIHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path[0] != '/' {
 		r.URL.Path = "/" + r.URL.Path
 	}
