@@ -15,6 +15,22 @@ export interface ResetPasswordParams {
 }
 
 /**
+ * @description: Set password interface parameters
+ */
+export interface SetPasswordParams {
+  token: string
+  password: string
+}
+
+/**
+ * @description: Set Contact interface parameters
+ */
+export interface SetContactParams {
+  token: string
+  contact: string
+}
+
+/**
  * @description: Register interface parameters
  */
 export interface RegisterParams {

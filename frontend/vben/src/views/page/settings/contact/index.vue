@@ -13,6 +13,9 @@
   import { defineComponent } from 'vue'
   import { PageWrapper } from '/@/components/Page'
   import { BasicForm, useForm } from '/@/components/Form'
+  import { setContactApi } from '/@/api/sys/user'
+  import { useMessage } from '/@/hooks/web/useMessage'
+  import md5 from 'md5'
 
   import { formSchema } from './contact.data'
   export default defineComponent({
@@ -27,16 +30,18 @@
         schemas: formSchema,
       })
 
+      const { createMessage } = useMessage()
+
       async function handleSubmit() {
         try {
           const values = await validate()
           const { contactOld, contactNew } = values
-
-          // TODO custom api
-          console.log(contactOld, contactNew)
-          // const { router } = useRouter()
-          // router.push(pageEnum.BASE_LOGIN)
-        } catch (error) {}
+          const { msg } = await setContactApi({
+            token: md5(contactOld + contactNew),
+            contact: contactNew,
+          })
+          createMessage.success(msg)
+        } catch (_) {}
       }
 
       return { register, resetFields, handleSubmit }

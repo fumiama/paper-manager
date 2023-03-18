@@ -84,6 +84,66 @@ func init() {
 		}
 		writeresult(w, codeSuccess, n, messageOk, typeSuccess)
 	}}
+
+	apimap["/api/setPassword"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setpasswordbody struct {
+			Token    string `json:"token"`
+			Password string `json:"password"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body setpasswordbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		err = setUserPassword(*user.ID, body.Token, body.Password)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "成功, 请重新登录"}, messageOk, typeSuccess)
+		_ = logout(token)
+	}}
+
+	apimap["/api/setContact"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setcontactbody struct {
+			Token   string `json:"token"`
+			Contact string `json:"contact"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body setcontactbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		err = setUserContact(*user.ID, body.Token, body.Contact)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		user.Cont = hideContact(body.Contact)
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "成功, 已将消息报告给课程组长"}, messageOk, typeSuccess)
+	}}
 }
 
 // Handler serves all backend /api call

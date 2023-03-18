@@ -4,6 +4,8 @@ import {
   LoginResultModel,
   GetUserInfoModel,
   ResetPasswordParams,
+  SetPasswordParams,
+  SetContactParams,
   RegisterParams,
   ResetPasswordResultModel,
   RegisterResultModel,
@@ -17,6 +19,8 @@ enum Api {
   Login = '/login',
   Logout = '/logout',
   ResetPassword = '/resetPassword',
+  SetPassword = '/setPassword',
+  SetContact = '/setContact',
   Register = '/register',
   GetUserInfo = '/getUserInfo',
   GetUsersCount = '/getUsersCount',
@@ -46,6 +50,36 @@ export function resetPasswordApi(params: ResetPasswordParams, mode: ErrorMessage
   return defHttp.post<ResetPasswordResultModel>(
     {
       url: Api.ResetPassword,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+    },
+  )
+}
+
+/**
+ * @description: set password api, borrowing the ResetPasswordResultModel as they're the same
+ */
+export function setPasswordApi(params: SetPasswordParams, mode: ErrorMessageMode = 'modal') {
+  return defHttp.post<ResetPasswordResultModel>(
+    {
+      url: Api.SetPassword,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+    },
+  )
+}
+
+/**
+ * @description: set contact api, borrowing the ResetPasswordResultModel as they're the same
+ */
+export function setContactApi(params: SetContactParams, mode: ErrorMessageMode = 'modal') {
+  return defHttp.post<ResetPasswordResultModel>(
+    {
+      url: Api.SetContact,
       params,
     },
     {
@@ -95,7 +129,7 @@ export function getUsersCount() {
 }*/
 
 export function doLogout() {
-  return defHttp.get({ url: Api.Logout })
+  return defHttp.get({ url: Api.Logout }, { errorMessageMode: 'none' })
 }
 
 /*export function testRetry() {

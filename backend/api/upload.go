@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fumiama/imgsz"
 	"github.com/sirupsen/logrus"
@@ -69,24 +70,24 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		avf := userf + "avatar." + format
+		avf := userf + "avatar" + time.Now().Format("_20060102_15_04_05") + "." + format
 		err = os.WriteFile(avf, data, 0644)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		err = global.UserDB.UpdateUserInfo(*user.ID, "", avf[6:], "")
+		/*err = global.UserDB.UpdateUserInfo(*user.ID, "", avf[6:], "")
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
+		user.Avtr = avf[6:]
+		usertokens.Set(token, user)*/
 		writeresult(w, codeSuccess, &upload{
 			Message: messageOk,
 			Code:    codeSuccess,
 			URL:     avf[6:],
 		}, messageOk, typeSuccess)
-		user.Avtr = avf[6:]
-		usertokens.Set(token, user)
 		logrus.Infoln("[file.UploadHandler] save avatar to", avf[6:])
 		return
 	}

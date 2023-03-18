@@ -13,12 +13,18 @@
   import { defineComponent } from 'vue'
   import { PageWrapper } from '/@/components/Page'
   import { BasicForm, useForm } from '/@/components/Form'
-
+  import { setPasswordApi } from '/@/api/sys/user'
+  import { useMessage } from '/@/hooks/web/useMessage'
+  import { useUserStore } from '/@/store/modules/user'
   import { formSchema } from './pwd.data'
+  import md5 from 'md5'
+
   export default defineComponent({
     name: 'ChangePassword',
     components: { BasicForm, PageWrapper },
     setup() {
+      const { createMessage } = useMessage()
+
       const [register, { validate, resetFields }] = useForm({
         size: 'large',
         baseColProps: { span: 24 },
@@ -31,12 +37,15 @@
         try {
           const values = await validate()
           const { passwordOld, passwordNew } = values
-
-          // TODO custom api
-          console.log(passwordOld, passwordNew)
-          // const { router } = useRouter()
-          // router.push(pageEnum.BASE_LOGIN)
-        } catch (error) {}
+          const { msg } = await setPasswordApi({
+            token: md5(passwordOld + passwordNew),
+            password: passwordNew,
+          })
+          createMessage.success(msg)
+          useUserStore().logout(true)
+        } catch (error) {
+          createMessage.error((error as unknown as Error).message)
+        }
       }
 
       return { register, resetFields, handleSubmit }

@@ -1,10 +1,13 @@
 package api
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
 
+	base14 "github.com/fumiama/go-base16384"
 	"github.com/fumiama/paper-manager/backend/global"
 )
 
@@ -29,12 +32,7 @@ type getUserInfoResult struct {
 	Contact  string `json:"contact"`
 }
 
-func getUserInfo(token string) (*getUserInfoResult, error) {
-	user := usertokens.Get(token)
-	if user == nil {
-		return nil, errInvalidToken
-	}
-	cont := user.Cont
+func hideContact(cont string) string {
 	if len(cont) > 7 {
 		sb := strings.Builder{}
 		sb.WriteString(cont[:3])
@@ -42,7 +40,15 @@ func getUserInfo(token string) (*getUserInfoResult, error) {
 			sb.WriteByte('*')
 		}
 		sb.WriteString(cont[len(cont)-4:])
-		cont = sb.String()
+		return sb.String()
+	}
+	return cont
+}
+
+func getUserInfo(token string) (*getUserInfoResult, error) {
+	user := usertokens.Get(token)
+	if user == nil {
+		return nil, errInvalidToken
 	}
 	return &getUserInfoResult{
 		UserID:   *user.ID,
@@ -59,7 +65,7 @@ func getUserInfo(token string) (*getUserInfoResult, error) {
 		Roles:   []role{{RoleName: user.Role.Nick(), Value: user.Role.String()}},
 		Date:    time.Unix(user.Date, 0).Format(chineseDateLayout),
 		Last:    time.Unix(user.Last, 0).Format(chineseDateLayout),
-		Contact: cont,
+		Contact: hideContact(user.Cont),
 	}, nil
 }
 
@@ -79,4 +85,32 @@ func getUsersCount(token string) (int, error) {
 		return 0, errInvalidToken
 	}
 	return global.UserDB.GetUsersCount()
+}
+
+func setUserPassword(id int, token, npwd string) error {
+	user, err := global.UserDB.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	h := md5.New()
+	h.Write(base14.StringToBytes(user.Pswd))
+	h.Write(base14.StringToBytes(npwd))
+	if token != hex.EncodeToString(h.Sum(make([]byte, 0, 16))) {
+		return errInvalidToken
+	}
+	return global.UserDB.UpdateUserPassword(id, npwd)
+}
+
+func setUserContact(id int, token, ncont string) error {
+	user, err := global.UserDB.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	h := md5.New()
+	h.Write(base14.StringToBytes(user.Cont))
+	h.Write(base14.StringToBytes(ncont))
+	if token != hex.EncodeToString(h.Sum(make([]byte, 0, 16))) {
+		return errInvalidToken
+	}
+	return global.UserDB.UpdateUserContact(id, ncont)
 }
