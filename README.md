@@ -9,6 +9,7 @@
 
 #### 登录
 > 登录时将依次访问`/api/getLoginSalt` `/api/login` `/api/getUserInfo`
+
 输入账号密码登录。登录成功后，前端将查询并缓存用户名、权限、头像、简介等信息备用，同时导航到指定的家页面。
 - **课程组长**：导航到分析页`/dashboard/analysis`
 - **其他人**：导航到工作台`/dashboard/workbench`
