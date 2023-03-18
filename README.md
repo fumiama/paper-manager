@@ -32,7 +32,7 @@
 
 ### 注销
 
-<img align="right" src="https://user-images.githubusercontent.com/41315874/226120744-a9c6e681-12f6-495e-b5a0-341e0e58497e.png" alt="logout" />
+<img align="right" src="https://user-images.githubusercontent.com/41315874/226120865-9f8d57bf-3884-420e-9ff6-008f50fb52d6.png" alt="logout" />
 
 该功能位于右上角状态栏头像的下拉列表中，点击`退出系统`后即可注销登录。
 > 注销时将访问`/api/logout`
@@ -42,6 +42,8 @@
 ### 仪表板/工作台 /dashboard/workbench
 
 ### 个人设置 /settings
+
+<img align="right" src="https://user-images.githubusercontent.com/41315874/226120888-ce79c227-7f0f-4681-ab74-99ce4433d768.png" alt="settings" />
 
 个人设置位于右上角状态栏头像的下拉列表中，点击后即可对用户自己的信息进行设置。
 #### 基本设置
