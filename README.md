@@ -45,6 +45,9 @@
 > 上传头像时，访问`/upload`
 
 > 保存设置时，访问`/api/setUserInfo`
+
+![base setting](https://user-images.githubusercontent.com/41315874/226120541-e2cc77e7-6601-49bb-8f8e-fe6d348f210b.png)
+
 #### 安全设置
 对用户的密码、联系方式进行修改。
 - **密码**：导航至`/settings/password`进行设置，成功后将自动退出当前登录，同时在系统消息中通知课程组长。
@@ -52,6 +55,9 @@
 > 设置密码时，访问`/api/setPassword`
 
 > 设置联系方式时，访问`/api/setContact`
+
+![secure setting](https://user-images.githubusercontent.com/41315874/226120560-83a8fa95-f2db-4202-8aee-a99c32b55b43.png)
+
 ### 试卷库 /filelist
 
 
