@@ -1,11 +1,12 @@
 # paper-manager
 面向教师的试卷网络管理系统，基于Golang+vben。项目由前端后端两大部分组成，没有中间件。
+
 ## 前端
 > 位于`frontend`文件夹
 
 基于`vben`编写前端页面并编译为静态文件以供`main.go`嵌入。
-### 登录页
-> /login
+
+### 登录页 /login
 
 #### 登录
 > 登录时将依次访问`/api/getLoginSalt` `/api/login` `/api/getUserInfo`
@@ -24,14 +25,11 @@
 > 注销时将访问`/api/logout`
 
 该功能位于右上角状态栏头像的下拉列表中，点击`退出系统`后即可注销登录。
-### 仪表板/分析页
-> /dashboard/analysis
+### 仪表板/分析页 /dashboard/analysis
 
-### 仪表板/工作台
-> /dashboard/workbench
+### 仪表板/工作台 /dashboard/workbench
 
-### 个人设置
-> /settings
+### 个人设置 /settings
 
 个人设置位于右上角状态栏头像的下拉列表中，点击后即可对用户自己的信息进行设置。
 #### 基本设置
@@ -47,8 +45,7 @@
 - **密码**：导航至`/settings/password`进行设置，成功后将自动退出当前登录，同时在系统消息中通知课程组长。
 - **联系方式**：导航至`/settings/contact`进行设置，成功后会在系统消息中通知课程组长。
 
-### 试卷库
-> /filelist
+### 试卷库 /filelist
 
 
 ## 后端
