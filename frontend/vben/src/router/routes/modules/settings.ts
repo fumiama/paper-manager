@@ -25,6 +25,16 @@ const settings: AppRouteModule = {
         hideMenu: true,
       },
     },
+    {
+      path: 'password',
+      name: 'PasswordSettingsPage',
+      component: () => import('/@/views/page/settings/password/index.vue'),
+      meta: {
+        title: t('routes.settings.password'),
+        icon: 'ion:settings-outline',
+        hideMenu: true,
+      },
+    },
   ],
 }
 

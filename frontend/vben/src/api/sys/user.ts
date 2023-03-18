@@ -19,6 +19,7 @@ enum Api {
   ResetPassword = '/resetPassword',
   Register = '/register',
   GetUserInfo = '/getUserInfo',
+  GetUsersCount = '/getUsersCount',
   GetPermCode = '/getPermCode',
   TestRetry = '/testRetry',
 }
@@ -82,15 +83,22 @@ export function getUserInfo() {
   return defHttp.get<GetUserInfoModel>({ url: Api.GetUserInfo }, { errorMessageMode: 'none' })
 }
 
-export function getPermCode() {
-  return defHttp.get<string[]>({ url: Api.GetPermCode })
+/**
+ * @description: getUsersCount
+ */
+export function getUsersCount() {
+  return defHttp.get<number>({ url: Api.GetUsersCount }, { errorMessageMode: 'none' })
 }
+
+/*export function getPermCode() {
+  return defHttp.get<string[]>({ url: Api.GetPermCode })
+}*/
 
 export function doLogout() {
   return defHttp.get({ url: Api.Logout })
 }
 
-export function testRetry() {
+/*export function testRetry() {
   return defHttp.get(
     { url: Api.TestRetry },
     {
@@ -101,4 +109,4 @@ export function testRetry() {
       },
     },
   )
-}
+}*/

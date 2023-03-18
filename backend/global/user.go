@@ -87,7 +87,7 @@ func init() {
 			Nick: "源文雨",
 			Avtr: "https://q1.qlogo.cn/g?b=qq&nk=1332524221&s=640",
 			Cont: "028-61830156",
-			Desc: "日は山の端にかかりぬ",
+			Desc: "天何所沓，十二焉分。日月安属，列星安陈。",
 		}, "系统")
 		logrus.Warn("[user] 初次启动, 创建初始账户 fumiama 密码 123456")
 	}
@@ -268,6 +268,13 @@ func (u *UserDatabase) GetUsers() (users []User, err error) {
 		return nil
 	})
 	return
+}
+
+// GetUsersCount ...
+func (u *UserDatabase) GetUsersCount() (int, error) {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
+	return u.db.Count(UserTableUser)
 }
 
 func (u *UserDatabase) GetSuperIDs() (ids []int, err error) {

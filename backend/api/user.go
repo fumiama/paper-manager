@@ -72,3 +72,11 @@ func logout(token string) error {
 	usertokens.Delete(token)
 	return nil
 }
+
+func getUsersCount(token string) (int, error) {
+	user := usertokens.Get(token)
+	if user == nil {
+		return 0, errInvalidToken
+	}
+	return global.UserDB.GetUsersCount()
+}

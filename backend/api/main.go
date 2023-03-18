@@ -7,15 +7,22 @@ import (
 	"github.com/fumiama/paper-manager/backend/utils"
 )
 
-// Handler serves all backend /api call
-func Handler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path[0] != '/' {
-		r.URL.Path = "/" + r.URL.Path
+type apihandler struct {
+	md string
+	do func(w http.ResponseWriter, r *http.Request)
+}
+
+func (h *apihandler) handle(w http.ResponseWriter, r *http.Request) {
+	if !utils.IsMethod(h.md, w, r) {
+		return
 	}
-	if r.URL.Path == "/api/getLoginSalt" {
-		if !utils.IsMethod("GET", w, r) {
-			return
-		}
+	h.do(w, r)
+}
+
+var apimap = make(map[string]*apihandler, 512)
+
+func init() {
+	apimap["/api/getLoginSalt"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
 		username := r.URL.Query().Get("username")
 		if username == "" {
 			writeresult(w, codeError, nil, "empty username", typeError)
@@ -27,59 +34,68 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeresult(w, codeSuccess, salt, messageOk, typeSuccess)
-		return
-	}
-	if r.URL.Path == "/api/login" {
-		if !utils.IsMethod("POST", w, r) {
-			return
+	}}
+
+	apimap["/api/login"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type loginbody struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
 		}
-		defer r.Body.Close()
 		var body loginbody
+		defer r.Body.Close()
 		err := json.NewDecoder(r.Body).Decode(&body)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		r, err := login(body.Username, body.Password)
+		ret, err := login(body.Username, body.Password)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		writeresult(w, codeSuccess, r, messageOk, typeSuccess)
-		return
-	}
-	if r.URL.Path == "/api/getUserInfo" {
-		if !utils.IsMethod("GET", w, r) {
-			return
-		}
+		writeresult(w, codeSuccess, ret, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/getUserInfo"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
-		r, err := getUserInfo(token)
+		ret, err := getUserInfo(token)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		writeresult(w, codeSuccess, r, messageOk, typeSuccess)
-		return
-	}
-	if r.URL.Path == "/api/logout" {
-		if !utils.IsMethod("GET", w, r) {
-			return
-		}
+		writeresult(w, codeSuccess, ret, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/logout"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
 		err := logout(r.Header.Get("Authorization"))
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
 		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
-		return
-	}
-	if !utils.IsMethod("GET", w, r) {
-		return
-	}
-	http.Error(w, "404 Not Found", http.StatusNotFound)
+	}}
+
+	apimap["/api/getUsersCount"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		n, err := getUsersCount(token)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, n, messageOk, typeSuccess)
+	}}
 }
 
-type loginbody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+// Handler serves all backend /api call
+func Handler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path[0] != '/' {
+		r.URL.Path = "/" + r.URL.Path
+	}
+
+	if h, ok := apimap[r.URL.Path]; ok {
+		h.handle(w, r)
+		return
+	}
+
+	http.Error(w, "404 Not Found", http.StatusNotFound)
 }

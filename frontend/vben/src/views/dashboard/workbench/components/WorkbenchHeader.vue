@@ -12,22 +12,27 @@
           })()
         }}安, {{ userinfo.realName }}, 要注意劳逸结合哦!</h1
       >
-      <span class="text-secondary"> 今日共有1人上线 </span>
+      <span class="text-secondary"> {{ userinfo.desc }} </span>
     </div>
     <div class="flex flex-1 justify-end md:mt-0 mt-4">
       <div class="flex flex-col justify-center text-right md:mr-10 mr-4">
         <span class="text-secondary"> 课程组人数 </span>
-        <span class="text-2xl">300</span>
+        <span class="text-2xl"> {{ userscount }} </span>
       </div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-  import { computed } from 'vue'
+  import { ref, computed } from 'vue'
   import { Avatar } from 'ant-design-vue'
   import { useUserStore } from '/@/store/modules/user'
   import headerImg from '/@/assets/images/header.jpg'
+  import { getUsersCount } from '/@/api/sys/user'
 
   const userStore = useUserStore()
   const userinfo = computed(() => userStore.getUserInfo)
+  const userscount = ref(0)
+  getUsersCount().then((value: number) => {
+    userscount.value = value
+  })
 </script>
