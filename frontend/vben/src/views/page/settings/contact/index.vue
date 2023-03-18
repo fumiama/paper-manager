@@ -15,6 +15,7 @@
   import { BasicForm, useForm } from '/@/components/Form'
   import { setContactApi } from '/@/api/sys/user'
   import { useMessage } from '/@/hooks/web/useMessage'
+  import { useUserStore } from '/@/store/modules/user'
   import md5 from 'md5'
 
   import { formSchema } from './contact.data'
@@ -31,6 +32,7 @@
       })
 
       const { createMessage } = useMessage()
+      const userStore = useUserStore()
 
       async function handleSubmit() {
         try {
@@ -41,6 +43,7 @@
             contact: contactNew,
           })
           createMessage.success(msg)
+          userStore.getUserInfoAction()
         } catch (_) {}
       }
 

@@ -12,7 +12,6 @@
             :value="avatarRef"
             btnText="更换头像"
             :btnProps="{ preIcon: 'ant-design:cloud-upload-outlined' }"
-            @change="updateAvatar"
             width="150"
           />
         </div>
@@ -27,13 +26,12 @@
   import { BasicForm, useForm } from '/@/components/Form/index'
   import { CollapseContainer } from '/@/components/Container'
   import { CropperAvatar } from '/@/components/Cropper'
-
   import { useMessage } from '/@/hooks/web/useMessage'
-
   import headerImg from '/@/assets/images/header.jpg'
   import { baseSetschemas } from './data'
   import { useUserStore } from '/@/store/modules/user'
   import { uploadApi } from '/@/api/sys/upload'
+  import { setUserInfoApi } from '/@/api/sys/user'
 
   export default defineComponent({
     components: {
@@ -45,11 +43,10 @@
       CropperAvatar,
     },
     setup() {
-      const { createMessage } = useMessage()
       const userStore = useUserStore()
       const { avatar } = userStore.getUserInfo
 
-      const [register, { setFieldsValue }] = useForm({
+      const [register, { getFieldsValue, setFieldsValue }] = useForm({
         labelWidth: 120,
         schemas: baseSetschemas,
         showActionButtonGroup: false,
@@ -62,9 +59,11 @@
 
       const avatarRef = ref(avatar || headerImg)
 
-      function updateAvatar({ src }) {
+      function updateUserInfo(nick: string, desc: string, avtr: string) {
         const userinfo = userStore.getUserInfo
-        userinfo.avatar = src
+        userinfo.realName = nick
+        userinfo.desc = desc
+        userinfo.avatar = avtr
         userStore.setUserInfo(userinfo)
       }
 
@@ -78,18 +77,30 @@
           },
           () => {},
         )
-        avatarRef.value = result.data.url
+        avatarRef.value = (result.data as any).result.url
         return result
+      }
+
+      const { createMessage } = useMessage()
+
+      function handleSubmit() {
+        const { realName, desc } = getFieldsValue()
+        setUserInfoApi({
+          nick: realName,
+          desc: desc,
+          avtr: avatarRef.value,
+        }).then((value) => {
+          if (avatarRef.value && avatarRef.value != headerImg)
+            updateUserInfo(realName, desc, avatarRef.value)
+          createMessage.success(value.msg)
+        })
       }
 
       return {
         avatarRef,
         register,
         onUpload,
-        updateAvatar,
-        handleSubmit: () => {
-          createMessage.success('更新成功！')
-        },
+        handleSubmit,
       }
     },
   })

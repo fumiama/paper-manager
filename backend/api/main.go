@@ -144,6 +144,39 @@ func init() {
 		}
 		writeresult(w, codeSuccess, &message{M: "成功, 已将消息报告给课程组长"}, messageOk, typeSuccess)
 	}}
+
+	apimap["/api/setUserInfo"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setuserinfobody struct {
+			Nick string `json:"nick"`
+			Desc string `json:"desc"`
+			Avtr string `json:"avtr"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body setuserinfobody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		err = setUserInfo(*user.ID, &body.Nick, &body.Desc, &body.Avtr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		user.Nick = body.Nick
+		user.Desc = body.Desc
+		user.Avtr = body.Avtr
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "成功"}, messageOk, typeSuccess)
+	}}
 }
 
 // Handler serves all backend /api call

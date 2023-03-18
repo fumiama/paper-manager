@@ -6,6 +6,7 @@ import {
   ResetPasswordParams,
   SetPasswordParams,
   SetContactParams,
+  SetUserInfoParams,
   RegisterParams,
   ResetPasswordResultModel,
   RegisterResultModel,
@@ -21,6 +22,7 @@ enum Api {
   ResetPassword = '/resetPassword',
   SetPassword = '/setPassword',
   SetContact = '/setContact',
+  SetUserInfo = '/setUserInfo',
   Register = '/register',
   GetUserInfo = '/getUserInfo',
   GetUsersCount = '/getUsersCount',
@@ -80,6 +82,21 @@ export function setContactApi(params: SetContactParams, mode: ErrorMessageMode =
   return defHttp.post<ResetPasswordResultModel>(
     {
       url: Api.SetContact,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+    },
+  )
+}
+
+/**
+ * @description: set userinfo api, borrowing the ResetPasswordResultModel as they're the same
+ */
+export function setUserInfoApi(params: SetUserInfoParams, mode: ErrorMessageMode = 'modal') {
+  return defHttp.post<ResetPasswordResultModel>(
+    {
+      url: Api.SetUserInfo,
       params,
     },
     {

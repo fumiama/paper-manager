@@ -4,11 +4,13 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
+	"os"
 	"strings"
 	"time"
 
 	base14 "github.com/fumiama/go-base16384"
 	"github.com/fumiama/paper-manager/backend/global"
+	"github.com/fumiama/paper-manager/backend/utils"
 )
 
 const (
@@ -113,4 +115,34 @@ func setUserContact(id int, token, ncont string) error {
 		return errInvalidToken
 	}
 	return global.UserDB.UpdateUserContact(id, ncont)
+}
+
+// setUserInfo may change the arguments
+func setUserInfo(id int, nick, desc, avtr *string) error {
+	user, err := global.UserDB.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	n, d, a := *nick, *desc, *avtr
+	if n == "" {
+		*nick = user.Nick
+	}
+	if n == user.Nick {
+		n = ""
+	}
+	if d == "" {
+		*desc = user.Desc
+	}
+	if d == user.Desc {
+		d = ""
+	}
+	if a == "" {
+		*avtr = user.Avtr
+	} else if utils.IsNotExist(global.DataFolder + a) {
+		return os.ErrNotExist
+	}
+	if a == user.Avtr {
+		a = ""
+	}
+	return global.UserDB.UpdateUserInfo(id, n, d, a)
 }

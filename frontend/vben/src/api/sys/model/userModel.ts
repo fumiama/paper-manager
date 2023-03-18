@@ -31,6 +31,15 @@ export interface SetContactParams {
 }
 
 /**
+ * @description: Set UserInfo interface parameters
+ */
+export interface SetUserInfoParams {
+  nick: string
+  desc: string
+  avtr: string
+}
+
+/**
  * @description: Register interface parameters
  */
 export interface RegisterParams {
