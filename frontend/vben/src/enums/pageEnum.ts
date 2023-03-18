@@ -9,6 +9,8 @@ export enum PageEnum {
   PAGE_SETTINGS = '/settings',
   // password settings path
   PAGE_PASSWORD_SETTINGS = '/settings/password',
+  // contact settings path
+  PAGE_CONTACT_SETTINGS = '/settings/contact',
   // error page path
   ERROR_PAGE = '/exception',
   // error log page path

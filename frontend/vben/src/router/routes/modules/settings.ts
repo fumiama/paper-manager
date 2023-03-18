@@ -35,6 +35,16 @@ const settings: AppRouteModule = {
         hideMenu: true,
       },
     },
+    {
+      path: 'contact',
+      name: 'ContactSettingsPage',
+      component: () => import('/@/views/page/settings/contact/index.vue'),
+      meta: {
+        title: t('routes.settings.contact'),
+        icon: 'ion:md-contact',
+        hideMenu: true,
+      },
+    },
   ],
 }
 

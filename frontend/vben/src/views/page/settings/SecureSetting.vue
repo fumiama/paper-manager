@@ -50,6 +50,9 @@
             title: '联系方式',
             description: '已记录的联系方式: ' + contact,
             extra: '修改',
+            click: () => {
+              go(PageEnum.PAGE_CONTACT_SETTINGS)
+            },
           },
         ],
       }
