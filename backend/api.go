@@ -177,6 +177,16 @@ func init() {
 		}
 		writeresult(w, codeSuccess, &message{M: "成功"}, messageOk, typeSuccess)
 	}}
+
+	apimap["/api/getMessageList"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		ret, err := getMessageList(token)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, ret, messageOk, typeSuccess)
+	}}
 }
 
 // APIHandler serves all backend /api call

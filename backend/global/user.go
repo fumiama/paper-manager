@@ -44,6 +44,17 @@ func (r UserRole) Nick() string {
 }
 
 const (
+	MessageNormal MessageType = iota
+	MessageRegister
+	MessageUserAdded
+	MessageContactChange
+	MessagePasswordChange
+	MessageResetPassword
+)
+
+type MessageType uint8
+
+const (
 	UserTableUser    = "user"
 	UserTableMessage = "msg"
 )
@@ -315,6 +326,24 @@ type Message struct {
 	Pswd string // Pswd is the user's password to add in register message
 }
 
+// Type decide message type by fields Name, Cont and Pswd.
+func (m *Message) Type() MessageType {
+	switch {
+	case m.Name != "" && m.Cont != "" && m.Pswd != "":
+		return MessageRegister
+	case m.Name == "" && m.Cont != "" && m.Pswd == "":
+		return MessageUserAdded
+	case m.Name != "" && m.Cont != "" && m.Pswd == "":
+		return MessageContactChange
+	case m.Name != "" && m.Cont == "" && m.Pswd != "":
+		return MessagePasswordChange
+	case m.Name != "" && m.Cont == "" && m.Pswd == "":
+		return MessageResetPassword
+	default:
+		return MessageNormal
+	}
+}
+
 // SendMessage will send a message
 func (u *UserDatabase) SendMessage(m *Message) error {
 	m.ID = nil
@@ -376,7 +405,6 @@ func (u *UserDatabase) notifyUserAdded(opname, name string) error {
 	m := Message{
 		Date: time.Now().Unix(),
 		Text: opname + "添加了用户 " + name,
-		Name: name,
 		Cont: opname,
 	}
 	u.mu.Lock()
@@ -449,7 +477,7 @@ func (u *UserDatabase) notifyPasswordChange(name, npwd string) error {
 	return nil
 }
 
-// GetMessagesOfUser set Pswd field to empty
+// GetMessagesOfUser will change non-empty Pswd field to "-"
 func (u *UserDatabase) GetMessagesOfUser(to int) (ms []Message, err error) {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
@@ -459,8 +487,10 @@ func (u *UserDatabase) GetMessagesOfUser(to int) (ms []Message, err error) {
 	}
 	ms = make([]Message, 0, n)
 	m := Message{}
-	err = u.db.FindFor(UserTableMessage, &m, "WHERE ToID="+strconv.Itoa(to), func() error {
-		m.Pswd = ""
+	err = u.db.FindFor(UserTableMessage, &m, "WHERE ToID="+strconv.Itoa(to)+" ORDER BY Date DESC", func() error {
+		if m.Pswd != "" {
+			m.Pswd = "-"
+		}
 		ms = append(ms, m)
 		return nil
 	})
