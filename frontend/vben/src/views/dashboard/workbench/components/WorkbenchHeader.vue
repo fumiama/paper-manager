@@ -16,8 +16,12 @@
     </div>
     <div class="flex flex-1 justify-end md:mt-0 mt-4">
       <div class="flex flex-col justify-center text-right md:mr-10 mr-4">
+        <span class="text-secondary"> 您已加入 </span>
+        <span class="text-2xl"> {{ enterDays }}天 </span>
+      </div>
+      <div class="flex flex-col justify-center text-right md:mr-10 mr-4">
         <span class="text-secondary"> 课程组人数 </span>
-        <span class="text-2xl"> {{ userscount }} </span>
+        <span class="text-2xl"> {{ userscount }}人 </span>
       </div>
     </div>
   </div>
@@ -31,6 +35,10 @@
 
   const userStore = useUserStore()
   const userinfo = computed(() => userStore.getUserInfo)
+  const enterDays = computed(() => {
+    const date: Date = new Date(new Date().getTime() - userStore.getUserInfo.date * 1000)
+    return date.getDay()
+  })
   const userscount = ref(0)
   getUsersCount().then((value: number) => {
     userscount.value = value

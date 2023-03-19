@@ -30,7 +30,7 @@ export interface UserInfo {
   desc?: string
   homePath?: string
   roles: RoleInfo[]
-  date: string
+  date: number
   last: string
   contact: string
 }

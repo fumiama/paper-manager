@@ -29,7 +29,7 @@ type getUserInfoResult struct {
 	Desc     string `json:"desc"`
 	HomePath string `json:"homePath"`
 	Roles    []role `json:"roles"`
-	Date     string `json:"date"`
+	Date     int64  `json:"date"`
 	Last     string `json:"last"`
 	Contact  string `json:"contact"`
 }
@@ -65,7 +65,7 @@ func getUserInfo(token string) (*getUserInfoResult, error) {
 			return "/dashboard/workbench"
 		}(),
 		Roles:   []role{{RoleName: user.Role.Nick(), Value: user.Role.String()}},
-		Date:    time.Unix(user.Date, 0).Format(chineseDateLayout),
+		Date:    user.Date,
 		Last:    time.Unix(user.Last, 0).Format(chineseDateLayout),
 		Contact: hideContact(user.Cont),
 	}, nil
