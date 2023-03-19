@@ -1,9 +1,15 @@
 package backend
 
 import (
+	"errors"
 	"time"
 
 	"github.com/fumiama/paper-manager/backend/global"
+)
+
+var (
+	errInvalidMessageID = errors.New("invalid message id")
+	errNothingToDo      = errors.New("nothing to do")
 )
 
 type messageList struct {
@@ -46,4 +52,35 @@ func getMessageList(token string) ([]messageList, error) {
 		ml[i].Type = m.Type()
 	}
 	return ml, nil
+}
+
+func acceptMessage(token string, id int) error {
+	user := usertokens.Get(token)
+	if user == nil {
+		return errInvalidToken
+	}
+	m, err := global.UserDB.GetMessageByID(id)
+	if err != nil {
+		return err
+	}
+	if m.ToID != *user.ID {
+		return errInvalidMessageID
+	}
+	switch m.Type() {
+	case global.MessageRegister:
+		return global.UserDB.AddUser(&global.User{
+			Role: global.RoleUser,
+			Pswd: m.Pswd,
+			Name: m.Name,
+			Cont: m.Cont,
+		}, user.Name)
+	case global.MessageResetPassword:
+		u, err := global.UserDB.GetUserByName(m.Name)
+		if err != nil {
+			return err
+		}
+		return global.UserDB.UpdateUserPassword(*u.ID, "123456")
+	default:
+		return errNothingToDo
+	}
 }

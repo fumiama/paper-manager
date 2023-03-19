@@ -21,6 +21,7 @@
                 item.type,
               )
             "
+            @click="accept(item.id)"
             >接受</a-button
           >
           &nbsp;&nbsp;
@@ -33,7 +34,8 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
   import { Card, List } from 'ant-design-vue'
-  import { getMessageList } from '/@/api/dashboard/index'
+  import { getMessageList, acceptMessage } from '/@/api/dashboard/index'
+  import { useMessage } from '/@/hooks/web/useMessage'
   import { MessageTypeEnum, MessageItem } from '/@/api/dashboard/model/workbenchModel'
   import { Avatar } from 'ant-design-vue'
   import headerImg from '/@/assets/images/header.jpg'
@@ -41,7 +43,14 @@
   const ListItem = List.Item
   const ListItemMeta = List.Item.Meta
   const dynamicInfoItemsRef = ref([] as MessageItem[])
+  const { createMessage } = useMessage()
   getMessageList().then((value) => {
     dynamicInfoItemsRef.value = value
   })
+  async function accept(id: number) {
+    try {
+      const msg = await acceptMessage(id)
+      createMessage.success(msg)
+    } catch (_) {}
+  }
 </script>

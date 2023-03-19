@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/fumiama/paper-manager/backend/utils"
@@ -252,6 +253,20 @@ func init() {
 			return
 		}
 		writeresult(w, codeSuccess, ret, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/acceptMessage"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(r.URL.Query().Get("id"))
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		err = acceptMessage(r.Header.Get("Authorization"), id)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, "成功", messageOk, typeSuccess)
 	}}
 }
 
