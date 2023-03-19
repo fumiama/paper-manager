@@ -146,3 +146,14 @@ func setUserInfo(id int, nick, desc, avtr *string) error {
 	}
 	return global.UserDB.UpdateUserInfo(id, n, a, d)
 }
+
+func resetPassword(ip, name, mobile string) error {
+	if registerlimit.Get(ip) {
+		return errRequestTooFast
+	}
+	if ip == "" {
+		return errInvalidIP
+	}
+	registerlimit.Set(ip, true)
+	return global.UserDB.NotifyResetPassword(ip, name, mobile)
+}

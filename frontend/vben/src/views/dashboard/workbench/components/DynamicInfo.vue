@@ -17,7 +17,9 @@
             ghost
             color="success"
             v-if="
-              item.type in [MessageTypeEnum.MessageRegister, MessageTypeEnum.MessageResetPassword]
+              [MessageTypeEnum.MessageRegister, MessageTypeEnum.MessageResetPassword].includes(
+                item.type,
+              )
             "
             >接受</a-button
           >

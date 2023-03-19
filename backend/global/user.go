@@ -67,6 +67,7 @@ var (
 	ErrEmptyContact      = errors.New("empty contact")
 	ErrUsernameExists    = errors.New("username exists")
 	ErrInvalidName       = errors.New("invalid name")
+	ErrInvalidContact    = errors.New("invalid contact")
 )
 
 func init() {
@@ -367,8 +368,7 @@ func (u *UserDatabase) NotifyRegister(ip, name, cont, pswd string) error {
 		}
 	}
 
-	_, err := u.GetUserByName(name)
-	if err == nil {
+	if u.IsNameExists(name) {
 		return ErrInvalidName
 	}
 
@@ -383,6 +383,50 @@ func (u *UserDatabase) NotifyRegister(ip, name, cont, pswd string) error {
 		Name: name,
 		Cont: cont,
 		Pswd: pswd,
+	}
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	for _, to := range tos {
+		m.ToID = to
+		err = u.db.InsertUnique(UserTableMessage, &m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// NotifyResetPassword will send notification to all supers
+func (u *UserDatabase) NotifyResetPassword(ip, name, cont string) error {
+	if name == "" {
+		return ErrEmptyName
+	}
+	if cont == "" {
+		return ErrEmptyContact
+	}
+	for _, c := range name {
+		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
+			return ErrInvalidName
+		}
+	}
+
+	user, err := u.GetUserByName(name)
+	if err != nil {
+		return err
+	}
+	if cont != user.Cont {
+		return ErrInvalidContact
+	}
+
+	tos, err := u.GetSuperIDs()
+	if err != nil {
+		return err
+	}
+
+	m := Message{
+		Date: time.Now().Unix(),
+		Text: "收到来自 " + ip + ", 用户名 " + user.Name + " 的重置密码请求, 联系方式: " + user.Cont,
+		Name: user.Name,
 	}
 	u.mu.Lock()
 	defer u.mu.Unlock()

@@ -91,7 +91,7 @@ export default [
     },
   },*/
   // mock reset password
-  {
+  /*{
     url: '/api/resetPassword',
     timeout: 200,
     method: 'post',
@@ -101,7 +101,7 @@ export default [
         msg: '已将用户' + username + '电话' + mobile + '的重置请求上报, 请耐心等待!',
       })
     },
-  },
+  },*/
   // mock register
   /*{
     url: '/api/register',

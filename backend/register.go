@@ -11,13 +11,13 @@ import (
 var registerlimit = ttl.NewCache[string, bool](time.Minute * 10)
 
 var (
-	errRegisterTooFast = errors.New("register too fast")
-	errInvalidIP       = errors.New("invalid IP")
+	errRequestTooFast = errors.New("request too fast")
+	errInvalidIP      = errors.New("invalid IP")
 )
 
 func register(ip, name, mobile, npwd string) error {
 	if registerlimit.Get(ip) {
-		return errRegisterTooFast
+		return errRequestTooFast
 	}
 	if ip == "" {
 		return errInvalidIP

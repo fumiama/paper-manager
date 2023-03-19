@@ -106,7 +106,7 @@ func init() {
 		type message struct {
 			M string `json:"msg"`
 		}
-		writeresult(w, codeSuccess, &message{M: "成功, 请耐心等待通知"}, messageOk, typeSuccess)
+		writeresult(w, codeSuccess, &message{M: "已上报, 请耐心等待通知"}, messageOk, typeSuccess)
 	}}
 
 	apimap["/api/getUsersCount"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
@@ -210,6 +210,38 @@ func init() {
 			M string `json:"msg"`
 		}
 		writeresult(w, codeSuccess, &message{M: "成功"}, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/resetPassword"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type resetpwdbody struct {
+			Username string `json:"username"`
+			Mobile   string `json:"mobile"`
+		}
+		if r.Header.Get("Authorization") != "" {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body resetpwdbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		ip := r.RemoteAddr
+		i := strings.LastIndex(ip, ":")
+		if i >= 0 {
+			ip = ip[:i]
+		}
+		err = resetPassword(ip, body.Username, body.Mobile)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "已上报, 请耐心等待通知"}, messageOk, typeSuccess)
 	}}
 
 	apimap["/api/getMessageList"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
