@@ -31,13 +31,19 @@
 ![login screen](https://user-images.githubusercontent.com/41315874/226117983-c1e69916-def0-4746-939a-5041412b755f.png)
 
 ### 注销
+
+<img align="right" src="https://user-images.githubusercontent.com/41315874/226120865-9f8d57bf-3884-420e-9ff6-008f50fb52d6.png" alt="logout" />
+
 该功能位于右上角状态栏头像的下拉列表中，点击`退出系统`后即可注销登录。
 > 注销时将访问`/api/logout`
+
 ### 仪表板/分析页 /dashboard/analysis
 
 ### 仪表板/工作台 /dashboard/workbench
 
 ### 个人设置 /settings
+
+<img align="right" src="https://user-images.githubusercontent.com/41315874/226120888-ce79c227-7f0f-4681-ab74-99ce4433d768.png" alt="settings" />
 
 个人设置位于右上角状态栏头像的下拉列表中，点击后即可对用户自己的信息进行设置。
 #### 基本设置
@@ -45,6 +51,9 @@
 > 上传头像时，访问`/upload`
 
 > 保存设置时，访问`/api/setUserInfo`
+
+![base setting](https://user-images.githubusercontent.com/41315874/226120541-e2cc77e7-6601-49bb-8f8e-fe6d348f210b.png)
+
 #### 安全设置
 对用户的密码、联系方式进行修改。
 - **密码**：导航至`/settings/password`进行设置，成功后将自动退出当前登录，同时在系统消息中通知课程组长。
@@ -52,6 +61,9 @@
 > 设置密码时，访问`/api/setPassword`
 
 > 设置联系方式时，访问`/api/setContact`
+
+![secure setting](https://user-images.githubusercontent.com/41315874/226120560-83a8fa95-f2db-4202-8aee-a99c32b55b43.png)
+
 ### 试卷库 /filelist
 
 
