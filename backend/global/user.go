@@ -3,7 +3,6 @@ package global
 import (
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/fumiama/paper-manager/backend/utils"
@@ -65,7 +64,7 @@ var (
 	ErrEmptyName         = errors.New("empty name")
 	ErrInvalidUsersCount = errors.New("invalid users count")
 	ErrEmptyUserID       = errors.New("empty user ID")
-	ErrEmptyContect      = errors.New("empty contact")
+	ErrEmptyContact      = errors.New("empty contact")
 	ErrUsernameExists    = errors.New("username exists")
 	ErrInvalidName       = errors.New("invalid name")
 )
@@ -201,7 +200,7 @@ func (u *UserDatabase) UpdateUserPassword(id int, npwd string) error {
 // UpdateUserContact ...
 func (u *UserDatabase) UpdateUserContact(id int, ncont string) error {
 	if ncont == "" {
-		return ErrEmptyContect
+		return ErrEmptyContact
 	}
 	user, err := u.GetUserByID(id)
 	if err != nil {
@@ -214,9 +213,8 @@ func (u *UserDatabase) UpdateUserContact(id int, ncont string) error {
 	return u.db.Insert(UserTableUser, &user)
 }
 
-// GetUserByName avoids sql injection by removing ; ' " =
+// GetUserByName avoids sql injection by limiting username to 0-9A-Za-z
 func (u *UserDatabase) GetUserByName(username string) (user User, err error) {
-	username = strings.NewReplacer(";", "", "'", "", `"`, "", "=", "").Replace(username)
 	for _, c := range username {
 		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
 			err = ErrInvalidName
@@ -229,9 +227,8 @@ func (u *UserDatabase) GetUserByName(username string) (user User, err error) {
 	return
 }
 
-// IsNameExists avoids sql injection by removing ; ' " =
+// IsNameExists avoids sql injection by limiting username to 0-9A-Za-z
 func (u *UserDatabase) IsNameExists(username string) bool {
-	username = strings.NewReplacer(";", "", "'", "", `"`, "", "=", "").Replace(username)
 	for _, c := range username {
 		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
 			return false
@@ -354,17 +351,25 @@ func (u *UserDatabase) SendMessage(m *Message) error {
 }
 
 // NotifyRegister will send register notification to all supers
-func (u *UserDatabase) NotifyRegister(name, cont, pswd string) error {
+func (u *UserDatabase) NotifyRegister(ip, name, cont, pswd string) error {
 	if name == "" {
 		return ErrEmptyName
+	}
+	if cont == "" {
+		return ErrEmptyContact
+	}
+	if pswd == "" {
+		return ErrEmptyPassword
 	}
 	for _, c := range name {
 		if !(c >= '0' && c <= '9') && !(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z') {
 			return ErrInvalidName
 		}
 	}
-	if pswd == "" {
-		return ErrEmptyPassword
+
+	_, err := u.GetUserByName(name)
+	if err == nil {
+		return ErrInvalidName
 	}
 
 	tos, err := u.GetSuperIDs()
@@ -374,7 +379,7 @@ func (u *UserDatabase) NotifyRegister(name, cont, pswd string) error {
 
 	m := Message{
 		Date: time.Now().Unix(),
-		Text: "收到来自 " + name + " 的注册请求, 联系方式: " + cont,
+		Text: "收到来自 " + ip + ", 用户名 " + name + " 的注册请求, 联系方式: " + cont,
 		Name: name,
 		Cont: cont,
 		Pswd: pswd,
@@ -423,6 +428,9 @@ func (u *UserDatabase) notifyUserAdded(opname, name string) error {
 func (u *UserDatabase) notifyContactChange(name, cont string) error {
 	if name == "" {
 		return ErrEmptyName
+	}
+	if cont == "" {
+		return ErrEmptyContact
 	}
 
 	tos, err := u.GetSuperIDs()

@@ -103,7 +103,7 @@ export default [
     },
   },
   // mock register
-  {
+  /*{
     url: '/api/register',
     timeout: 200,
     method: 'post',
@@ -113,7 +113,7 @@ export default [
         msg: '已将用户' + username + '电话' + mobile + '的注册请求上报, 请耐心等待!',
       })
     },
-  },
+  },*/
   /*{
     url: '/api/getUserInfo',
     method: 'get',

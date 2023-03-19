@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/fumiama/paper-manager/backend/utils"
 )
@@ -73,6 +74,39 @@ func init() {
 			return
 		}
 		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/register"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type registerbody struct {
+			Username string `json:"username"`
+			Mobile   string `json:"mobile"`
+			Password string `json:"password"`
+		}
+		if r.Header.Get("Authorization") != "" {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body registerbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		ip := r.RemoteAddr
+		i := strings.LastIndex(ip, ":")
+		if i >= 0 {
+			ip = ip[:i]
+		}
+		err = register(ip, body.Username, body.Mobile, body.Password)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "成功, 请耐心等待通知"}, messageOk, typeSuccess)
 	}}
 
 	apimap["/api/getUsersCount"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {

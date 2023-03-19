@@ -27,11 +27,17 @@ func getMessageList(token string) ([]messageList, error) {
 		return nil, nil
 	}
 	ml := make([]messageList, len(ms))
+	am := make(map[string]string, 64)
 	for i, m := range ms {
 		avtr := ""
-		u, err := global.UserDB.GetUserByName(m.Name)
-		if err == nil {
-			avtr = u.Avtr
+		if a, ok := am[m.Name]; ok {
+			avtr = a
+		} else {
+			u, err := global.UserDB.GetUserByName(m.Name)
+			if err == nil {
+				avtr = u.Avtr
+				am[m.Name] = u.Avtr
+			}
 		}
 		ml[i].ID = *m.ID
 		ml[i].Avatar = avtr
