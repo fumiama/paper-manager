@@ -7,7 +7,7 @@
   import { defineComponent, ref, computed, unref } from 'vue'
   import { BasicModal, useModalInner } from '/@/components/Modal'
   import { BasicForm, useForm } from '/@/components/Form/index'
-  import { nameFormSchema } from './account.data'
+  import { isNameExist } from '/@/api/sys/user'
 
   export default defineComponent({
     name: 'AccountModal',
@@ -20,7 +20,81 @@
       const [registerForm, { setFieldsValue, updateSchema, resetFields, validate }] = useForm({
         labelWidth: 100,
         baseColProps: { span: 24 },
-        schemas: nameFormSchema,
+        schemas: [
+          {
+            field: 'name',
+            label: '用户名',
+            component: 'Input',
+            rules: [
+              {
+                required: true,
+                message: '请输入用户名',
+              },
+              {
+                validator(_, value) {
+                  return new Promise((resolve, reject) => {
+                    if (unref(isUpdate)) {
+                      resolve()
+                      return
+                    }
+                    isNameExist(value)
+                      .then((v) => {
+                        if (!v) resolve()
+                        else reject('用户名已存在')
+                      })
+                      .catch((err) => {
+                        reject(err.message || '验证失败')
+                      })
+                  })
+                },
+              },
+            ],
+          },
+          {
+            field: 'pwd',
+            label: '密码',
+            component: 'InputPassword',
+            required: true,
+            ifShow: false,
+          },
+          {
+            label: '角色',
+            field: 'role',
+            component: 'ApiSelect',
+            componentProps: {
+              api: () => {
+                return [
+                  {
+                    roleName: '课程组长',
+                    value: 'super',
+                  },
+                  {
+                    roleName: '归档代理',
+                    value: 'filemgr',
+                  },
+                  {
+                    roleName: '课程组员',
+                    value: 'user',
+                  },
+                ]
+              },
+              labelField: 'roleName',
+              valueField: 'value',
+            },
+            required: true,
+          },
+          {
+            field: 'nick',
+            label: '昵称',
+            component: 'Input',
+            required: true,
+          },
+          {
+            label: '简介',
+            field: 'desc',
+            component: 'InputTextArea',
+          },
+        ],
         showActionButtonGroup: false,
         actionColOptions: {
           span: 23,
