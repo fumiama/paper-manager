@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	errInvalidMessageID = errors.New("invalid message id")
-	errNothingToDo      = errors.New("nothing to do")
+	errInvalidMessageID   = errors.New("invalid message id")
+	errNoAcceptPermission = errors.New("no accept permission")
+	errNothingToDo        = errors.New("nothing to do")
 )
 
 type messageList struct {
@@ -39,7 +40,12 @@ func getMessageList(token string) ([]messageList, error) {
 		if a, ok := am[m.Name]; ok {
 			avtr = a
 		} else {
-			u, err := global.UserDB.GetUserByName(m.Name)
+			var u global.User
+			if m.Name != "" {
+				u, err = global.UserDB.GetUserByName(m.Name)
+			} else if m.Cont != "" {
+				u, err = global.UserDB.GetUserByName(m.Cont)
+			}
 			if err == nil {
 				avtr = u.Avtr
 				am[m.Name] = u.Avtr
@@ -58,6 +64,9 @@ func acceptMessage(token string, id int) error {
 	user := usertokens.Get(token)
 	if user == nil {
 		return errInvalidToken
+	}
+	if !user.IsSuper() {
+		return errNoAcceptPermission
 	}
 	m, err := global.UserDB.GetMessageByID(id)
 	if err != nil {
@@ -83,4 +92,19 @@ func acceptMessage(token string, id int) error {
 	default:
 		return errNothingToDo
 	}
+}
+
+func delMessage(token string, id int) error {
+	user := usertokens.Get(token)
+	if user == nil {
+		return errInvalidToken
+	}
+	m, err := global.UserDB.GetMessageByID(id)
+	if err != nil {
+		return err
+	}
+	if m.ToID != *user.ID {
+		return errInvalidMessageID
+	}
+	return global.UserDB.DelMessageByID(id)
 }

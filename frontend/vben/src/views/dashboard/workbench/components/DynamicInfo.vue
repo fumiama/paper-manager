@@ -25,7 +25,7 @@
             >接受</a-button
           >
           &nbsp;&nbsp;
-          <a-button ghost color="error">删除</a-button>
+          <a-button ghost color="error" @click="del(item.id)">删除</a-button>
         </ListItem>
       </template>
     </List>
@@ -34,7 +34,7 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
   import { Card, List } from 'ant-design-vue'
-  import { getMessageList, acceptMessage } from '/@/api/dashboard/index'
+  import { getMessageList, acceptMessage, deleteMessage } from '/@/api/dashboard/index'
   import { useMessage } from '/@/hooks/web/useMessage'
   import { MessageTypeEnum, MessageItem } from '/@/api/dashboard/model/workbenchModel'
   import { Avatar } from 'ant-design-vue'
@@ -45,12 +45,24 @@
   const dynamicInfoItemsRef = ref([] as MessageItem[])
   const { createMessage } = useMessage()
   getMessageList().then((value) => {
-    dynamicInfoItemsRef.value = value
+    if (value) dynamicInfoItemsRef.value = value
   })
   async function accept(id: number) {
     try {
       const msg = await acceptMessage(id)
       createMessage.success(msg)
+      getMessageList().then((value) => {
+        dynamicInfoItemsRef.value = value
+      })
+    } catch (_) {}
+  }
+  async function del(id: number) {
+    try {
+      const msg = await deleteMessage(id)
+      createMessage.success(msg)
+      getMessageList().then((value) => {
+        dynamicInfoItemsRef.value = value
+      })
     } catch (_) {}
   }
 </script>

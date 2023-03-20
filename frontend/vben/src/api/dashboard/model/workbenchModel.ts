@@ -5,6 +5,7 @@ export enum MessageTypeEnum {
   MessageContactChange = 3,
   MessagePasswordChange = 4,
   MessageResetPassword = 5,
+  MessageOperator = 6,
 }
 
 export interface MessageItem {

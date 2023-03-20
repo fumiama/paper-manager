@@ -49,6 +49,7 @@ const (
 	MessageContactChange
 	MessagePasswordChange
 	MessageResetPassword
+	MessageOperator
 )
 
 type MessageType uint8
@@ -63,6 +64,7 @@ var (
 	ErrEmptyPassword     = errors.New("empty password")
 	ErrEmptyName         = errors.New("empty name")
 	ErrInvalidUsersCount = errors.New("invalid users count")
+	ErrInvalidUserID     = errors.New("invalid user ID")
 	ErrEmptyUserID       = errors.New("empty user ID")
 	ErrEmptyContact      = errors.New("empty contact")
 	ErrUsernameExists    = errors.New("username exists")
@@ -140,10 +142,21 @@ func (u *UserDatabase) AddUser(user *User, opname string) error {
 	}
 	user.Date = time.Now().Unix()
 	user.Last = user.Date
-	_ = u.notifyUserAdded(opname, user.Name)
 	u.mu.Lock()
-	defer u.mu.Unlock()
-	return u.db.InsertUnique(UserTableUser, user)
+	err := u.db.InsertUnique(UserTableUser, user)
+	u.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	err = u.notifyUserAdded(opname, user.Name)
+	if err != nil {
+		return err
+	}
+	nu, err := u.GetUserByName(user.Name)
+	if err != nil {
+		return err
+	}
+	return u.SendMessage("创建了账号", opname, *nu.ID)
 }
 
 // UpdateUserInfo ...
@@ -162,12 +175,16 @@ func (u *UserDatabase) UpdateUserInfo(id int, nick, avtr, desc string) error {
 		user.Desc = desc
 	}
 	u.mu.Lock()
-	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, &user)
+	err = u.db.Insert(UserTableUser, &user)
+	u.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	return u.SendMessage("更新了个人信息", user.Name, *user.ID)
 }
 
 // UpdateUserRole ...
-func (u *UserDatabase) UpdateUserRole(id int, nr UserRole) error {
+func (u *UserDatabase) UpdateUserRole(id int, nr UserRole, opname string) error {
 	if nr == RoleNil || nr > RoleUser {
 		return ErrInvalidRole
 	}
@@ -177,8 +194,12 @@ func (u *UserDatabase) UpdateUserRole(id int, nr UserRole) error {
 	}
 	user.Role = nr
 	u.mu.Lock()
-	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, &user)
+	err = u.db.Insert(UserTableUser, &user)
+	u.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	return u.SendMessage("您的权限被变更为"+user.Role.Nick(), opname, *user.ID)
 }
 
 // UpdateUserPassword ...
@@ -194,8 +215,12 @@ func (u *UserDatabase) UpdateUserPassword(id int, npwd string) error {
 	user.Pswd = npwd
 	_ = u.notifyPasswordChange(user.Name, npwd)
 	u.mu.Lock()
-	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, &user)
+	err = u.db.Insert(UserTableUser, &user)
+	u.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	return u.SendMessage("更新了密码", user.Name, *user.ID)
 }
 
 // UpdateUserContact ...
@@ -210,8 +235,12 @@ func (u *UserDatabase) UpdateUserContact(id int, ncont string) error {
 	user.Cont = ncont
 	_ = u.notifyContactChange(user.Name, ncont)
 	u.mu.Lock()
-	defer u.mu.Unlock()
-	return u.db.Insert(UserTableUser, &user)
+	err = u.db.Insert(UserTableUser, &user)
+	u.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	return u.SendMessage("更新了联系方式", user.Name, *user.ID)
 }
 
 // GetUserByName avoids sql injection by limiting username to 0-9A-Za-z
@@ -226,6 +255,13 @@ func (u *UserDatabase) GetUserByName(username string) (user User, err error) {
 	err = u.db.Find(UserTableUser, &user, "WHERE Name='"+username+"'")
 	u.mu.RUnlock()
 	return
+}
+
+// IsIDExists ...
+func (u *UserDatabase) IsIDExists(id int) bool {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
+	return u.db.CanFind(UserTableUser, "WHERE ID="+strconv.Itoa(id))
 }
 
 // IsNameExists avoids sql injection by limiting username to 0-9A-Za-z
@@ -337,15 +373,19 @@ func (m *Message) Type() MessageType {
 		return MessagePasswordChange
 	case m.Name != "" && m.Cont == "" && m.Pswd == "":
 		return MessageResetPassword
+	case m.Name == "" && m.Cont != "" && m.Pswd != "":
+		return MessageOperator
 	default:
 		return MessageNormal
 	}
 }
 
-// SendMessage will send a message
-func (u *UserDatabase) SendMessage(m *Message) error {
-	m.ID = nil
-	m.Date = time.Now().Unix()
+// SendMessage will send a normal message to id
+func (u *UserDatabase) SendMessage(text, opname string, to int) error {
+	if !u.IsIDExists(to) {
+		return ErrInvalidUserID
+	}
+	m := Message{ToID: to, Date: time.Now().Unix(), Text: text, Cont: opname, Pswd: "opname"}
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	return u.db.InsertUnique(UserTableMessage, m)
@@ -419,6 +459,11 @@ func (u *UserDatabase) NotifyResetPassword(ip, name, cont string) error {
 	}
 
 	tos, err := u.GetSuperIDs()
+	if err != nil {
+		return err
+	}
+
+	err = u.SendMessage("发送重置密码请求", user.Name, *user.ID)
 	if err != nil {
 		return err
 	}
