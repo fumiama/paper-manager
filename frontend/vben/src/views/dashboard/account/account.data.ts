@@ -49,7 +49,6 @@ export const nameFormSchema: FormSchema[] = [
     field: 'name',
     label: '用户名',
     component: 'Input',
-    helpMessage: ['不能输入带有admin的用户名'],
     rules: [
       {
         required: true,
@@ -60,7 +59,7 @@ export const nameFormSchema: FormSchema[] = [
           return new Promise((resolve, reject) => {
             isNameExist(value)
               .then((v) => {
-                if (v) resolve()
+                if (!v) resolve()
                 else reject('用户名已存在')
               })
               .catch((err) => {
