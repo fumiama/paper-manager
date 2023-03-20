@@ -120,6 +120,31 @@ func init() {
 		writeresult(w, codeSuccess, n, messageOk, typeSuccess)
 	}}
 
+	apimap["/api/getUsersList"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		ret, err := getUsersList(token)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, &ret, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/isNameExist"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		name := r.URL.Query().Get("username")
+		if name == "" {
+			writeresult(w, codeError, nil, "empty username", typeError)
+			return
+		}
+		yes, err := isNameExist(token, name)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, yes, messageOk, typeSuccess)
+	}}
+
 	apimap["/api/setPassword"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
 		type setpasswordbody struct {
 			Token    string `json:"token"`

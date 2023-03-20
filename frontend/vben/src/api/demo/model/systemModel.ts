@@ -23,14 +23,12 @@ export type MenuParams = {
 }
 
 export interface AccountListItem {
-  id: string
-  account: string
-  email: string
-  nickname: string
+  id: number
+  name: string
+  nick: string
   role: number
-  createTime: string
-  remark: string
-  status: number
+  date: string
+  desc: string
 }
 
 export interface DeptListItem {
@@ -52,12 +50,8 @@ export interface MenuListItem {
 }
 
 export interface RoleListItem {
-  id: string
   roleName: string
-  roleValue: string
-  status: number
-  orderNo: string
-  createTime: string
+  value: string
 }
 
 /**

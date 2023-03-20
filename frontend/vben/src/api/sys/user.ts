@@ -11,6 +11,7 @@ import {
   ResetPasswordResultModel,
   RegisterResultModel,
   GetLoginSaltModel,
+  GetUsersListModel,
 } from './model/userModel'
 
 import { ErrorMessageMode } from '/#/axios'
@@ -26,8 +27,8 @@ enum Api {
   Register = '/register',
   GetUserInfo = '/getUserInfo',
   GetUsersCount = '/getUsersCount',
-  GetPermCode = '/getPermCode',
-  TestRetry = '/testRetry',
+  GetUsersList = '/getUsersList',
+  IsNameExist = '/isNameExist',
 }
 
 /**
@@ -141,23 +142,23 @@ export function getUsersCount() {
   return defHttp.get<number>({ url: Api.GetUsersCount }, { errorMessageMode: 'none' })
 }
 
-/*export function getPermCode() {
-  return defHttp.get<string[]>({ url: Api.GetPermCode })
-}*/
+/**
+ * @description: getUsersList
+ */
+export function getUsersList() {
+  return defHttp.get<GetUsersListModel[]>({ url: Api.GetUsersList }, { errorMessageMode: 'none' })
+}
+
+/**
+ * @description: isNameExist
+ */
+export function isNameExist(username: string) {
+  return defHttp.get<boolean>(
+    { url: Api.IsNameExist, params: { username } },
+    { errorMessageMode: 'none' },
+  )
+}
 
 export function doLogout() {
   return defHttp.get({ url: Api.Logout }, { errorMessageMode: 'none' })
 }
-
-/*export function testRetry() {
-  return defHttp.get(
-    { url: Api.TestRetry },
-    {
-      retryRequest: {
-        isOpenRetry: true,
-        count: 5,
-        waitTime: 1000,
-      },
-    },
-  )
-}*/

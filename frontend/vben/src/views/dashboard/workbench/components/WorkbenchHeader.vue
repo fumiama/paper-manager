@@ -36,8 +36,8 @@
   const userStore = useUserStore()
   const userinfo = computed(() => userStore.getUserInfo)
   const enterDays = computed(() => {
-    const date: Date = new Date(new Date().getTime() - userStore.getUserInfo.date * 1000)
-    return date.getDay()
+    const date: number = new Date().getTime() - userStore.getUserInfo.date * 1000
+    return (date / 1000 / 3600 / 24).toFixed(2)
   })
   const userscount = ref(0)
   getUsersCount().then((value: number) => {

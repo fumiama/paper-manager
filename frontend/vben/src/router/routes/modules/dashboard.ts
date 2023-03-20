@@ -26,6 +26,16 @@ const dashboard: AppRouteModule = {
       },
     },
     {
+      path: 'account',
+      name: 'Account',
+      component: () => import('/@/views/dashboard/account/index.vue'),
+      meta: {
+        // affix: true,
+        title: t('routes.dashboard.account'),
+        roles: [RoleEnum.SUPER],
+      },
+    },
+    {
       path: 'workbench',
       name: 'Workbench',
       component: () => import('/@/views/dashboard/workbench/index.vue'),

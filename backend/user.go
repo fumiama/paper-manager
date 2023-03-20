@@ -18,7 +18,8 @@ const (
 )
 
 var (
-	errInvalidToken = errors.New("invalid token")
+	errInvalidToken          = errors.New("invalid token")
+	errNoListUsersPermission = errors.New("no list users permission")
 )
 
 type getUserInfoResult struct {
@@ -89,6 +90,50 @@ func getUsersCount(token string) (int, error) {
 	return global.UserDB.GetUsersCount()
 }
 
+type getUsersListResult struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Nick string `json:"nick"`
+	Role string `json:"role"`
+	Date string `json:"date"`
+	Desc string `json:"desc"`
+}
+
+func getUsersList(token string) ([]getUsersListResult, error) {
+	user := usertokens.Get(token)
+	if user == nil {
+		return nil, errInvalidToken
+	}
+	if !user.IsSuper() {
+		return nil, errNoListUsersPermission
+	}
+	us, err := global.UserDB.GetUsers()
+	if err != nil {
+		return nil, err
+	}
+	ret := make([]getUsersListResult, len(us))
+	for i, u := range us {
+		ret[i].ID = *u.ID
+		ret[i].Name = u.Name
+		ret[i].Nick = u.Nick
+		ret[i].Role = u.Role.Nick()
+		ret[i].Date = time.Unix(user.Date, 0).Format(chineseDateLayout)
+		ret[i].Desc = u.Desc
+	}
+	return ret, nil
+}
+
+func isNameExist(token, name string) (bool, error) {
+	user := usertokens.Get(token)
+	if user == nil {
+		return false, errInvalidToken
+	}
+	if !user.IsSuper() {
+		return false, errNoListUsersPermission
+	}
+	return global.UserDB.IsNameExists(name), nil
+}
+
 func setUserPassword(id int, token, npwd string) error {
 	user, err := global.UserDB.GetUserByID(id)
 	if err != nil {
@@ -100,7 +145,7 @@ func setUserPassword(id int, token, npwd string) error {
 	if token != hex.EncodeToString(h.Sum(make([]byte, 0, 16))) {
 		return errInvalidToken
 	}
-	return global.UserDB.UpdateUserPassword(id, npwd)
+	return global.UserDB.UpdateUserPassword(id, user.Name, npwd)
 }
 
 func setUserContact(id int, token, ncont string) error {
@@ -114,7 +159,7 @@ func setUserContact(id int, token, ncont string) error {
 	if token != hex.EncodeToString(h.Sum(make([]byte, 0, 16))) {
 		return errInvalidToken
 	}
-	return global.UserDB.UpdateUserContact(id, ncont)
+	return global.UserDB.UpdateUserContact(id, user.Name, ncont)
 }
 
 // setUserInfo may change the arguments
@@ -144,7 +189,7 @@ func setUserInfo(id int, nick, desc, avtr *string) error {
 	if a == user.Avtr {
 		a = ""
 	}
-	return global.UserDB.UpdateUserInfo(id, n, a, d)
+	return global.UserDB.UpdateUserInfo(id, user.Name, n, a, d)
 }
 
 func resetPassword(ip, name, mobile string) error {

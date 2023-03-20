@@ -160,7 +160,7 @@ func (u *UserDatabase) AddUser(user *User, opname string) error {
 }
 
 // UpdateUserInfo ...
-func (u *UserDatabase) UpdateUserInfo(id int, nick, avtr, desc string) error {
+func (u *UserDatabase) UpdateUserInfo(id int, opname, nick, avtr, desc string) error {
 	user, err := u.GetUserByID(id)
 	if err != nil {
 		return err
@@ -180,7 +180,7 @@ func (u *UserDatabase) UpdateUserInfo(id int, nick, avtr, desc string) error {
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("更新了个人信息", user.Name, *user.ID)
+	return u.SendMessage("更新了个人信息", opname, *user.ID)
 }
 
 // UpdateUserRole ...
@@ -203,7 +203,7 @@ func (u *UserDatabase) UpdateUserRole(id int, nr UserRole, opname string) error 
 }
 
 // UpdateUserPassword ...
-func (u *UserDatabase) UpdateUserPassword(id int, npwd string) error {
+func (u *UserDatabase) UpdateUserPassword(id int, opname, npwd string) error {
 	if npwd == "" {
 		return ErrEmptyPassword
 	}
@@ -220,11 +220,11 @@ func (u *UserDatabase) UpdateUserPassword(id int, npwd string) error {
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("更新了密码", user.Name, *user.ID)
+	return u.SendMessage("更新了密码", opname, *user.ID)
 }
 
 // UpdateUserContact ...
-func (u *UserDatabase) UpdateUserContact(id int, ncont string) error {
+func (u *UserDatabase) UpdateUserContact(id int, opname, ncont string) error {
 	if ncont == "" {
 		return ErrEmptyContact
 	}
@@ -240,7 +240,7 @@ func (u *UserDatabase) UpdateUserContact(id int, ncont string) error {
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("更新了联系方式", user.Name, *user.ID)
+	return u.SendMessage("更新了联系方式", opname, *user.ID)
 }
 
 // GetUserByName avoids sql injection by limiting username to 0-9A-Za-z
@@ -307,7 +307,7 @@ func (u *UserDatabase) GetUsers() (users []User, err error) {
 		user.Pswd = ""
 		users[i] = user
 		i++
-		if i >= n {
+		if i > n {
 			return ErrInvalidUsersCount
 		}
 		return nil

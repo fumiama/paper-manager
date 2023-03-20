@@ -88,7 +88,7 @@ func acceptMessage(token string, id int) error {
 		if err != nil {
 			return err
 		}
-		return global.UserDB.UpdateUserPassword(*u.ID, "123456")
+		return global.UserDB.UpdateUserPassword(*u.ID, user.Name, "123456")
 	default:
 		return errNothingToDo
 	}

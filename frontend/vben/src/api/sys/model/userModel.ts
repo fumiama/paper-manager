@@ -102,3 +102,12 @@ export interface GetUserInfoModel {
 export interface GetLoginSaltModel {
   salt: string
 }
+
+export interface GetUsersListModel {
+  id: number
+  name: string
+  nick: string
+  role: number
+  date: string
+  desc: string
+}

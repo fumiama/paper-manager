@@ -2,13 +2,14 @@ import {
   AccountParams,
   DeptListItem,
   MenuParams,
-  RoleParams,
+  // RoleParams,
   RolePageParams,
   MenuListGetResultModel,
   DeptListGetResultModel,
   AccountListGetResultModel,
   RolePageListGetResultModel,
-  RoleListGetResultModel,
+  // RoleListGetResultModel,
+  RoleListItem,
 } from './model/systemModel'
 import { defHttp } from '/@/utils/http/axios'
 
@@ -19,7 +20,7 @@ enum Api {
   setRoleStatus = '/system/setRoleStatus',
   MenuList = '/system/getMenuList',
   RolePageList = '/system/getRoleListByPage',
-  GetAllRoleList = '/system/getAllRoleList',
+  // GetAllRoleList = '/system/getAllRoleList',
 }
 
 export const getAccountList = (params: AccountParams) =>
@@ -34,8 +35,22 @@ export const getMenuList = (params?: MenuParams) =>
 export const getRoleListByPage = (params?: RolePageParams) =>
   defHttp.get<RolePageListGetResultModel>({ url: Api.RolePageList, params })
 
-export const getAllRoleList = (params?: RoleParams) =>
-  defHttp.get<RoleListGetResultModel>({ url: Api.GetAllRoleList, params })
+export const getAllRoleList = () => {
+  return [
+    {
+      roleName: '课程组长',
+      value: 'super',
+    },
+    {
+      roleName: '归档代理',
+      value: 'filemgr',
+    },
+    {
+      roleName: '课程组员',
+      value: 'user',
+    },
+  ] as RoleListItem[]
+}
 
 export const setRoleStatus = (id: number, status: string) =>
   defHttp.post({ url: Api.setRoleStatus, params: { id, status } })
