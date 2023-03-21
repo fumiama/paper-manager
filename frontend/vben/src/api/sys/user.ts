@@ -29,6 +29,8 @@ enum Api {
   GetUsersCount = '/getUsersCount',
   GetUsersList = '/getUsersList',
   IsNameExist = '/isNameExist',
+  SetRole = '/setRole',
+  SetStatus = '/setStatus',
 }
 
 /**
@@ -162,3 +164,9 @@ export function isNameExist(username: string) {
 export function doLogout() {
   return defHttp.get({ url: Api.Logout }, { errorMessageMode: 'none' })
 }
+
+export const setRole = (id: number, role: number) =>
+  defHttp.post({ url: Api.SetRole, params: { id, role } })
+
+export const setStatus = (id: number, stat: boolean) =>
+  defHttp.post({ url: Api.SetStatus, params: { id, stat } })

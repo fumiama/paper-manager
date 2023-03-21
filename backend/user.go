@@ -20,6 +20,8 @@ const (
 var (
 	errInvalidToken          = errors.New("invalid token")
 	errNoListUsersPermission = errors.New("no list users permission")
+	errNoSetRolePermission   = errors.New("no set role permission")
+	errInvalidRole           = errors.New("invalid role")
 )
 
 type getUserInfoResult struct {
@@ -94,6 +96,7 @@ type getUsersListResult struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 	Nick string `json:"nick"`
+	Stat bool   `json:"stat"`
 	Role string `json:"role"`
 	Date string `json:"date"`
 	Desc string `json:"desc"`
@@ -116,8 +119,9 @@ func getUsersList(token string) ([]getUsersListResult, error) {
 		ret[i].ID = *u.ID
 		ret[i].Name = u.Name
 		ret[i].Nick = u.Nick
+		ret[i].Stat = u.Pswd != ""
 		ret[i].Role = u.Role.Nick()
-		ret[i].Date = time.Unix(user.Date, 0).Format(chineseDateLayout)
+		ret[i].Date = time.Unix(u.Date, 0).Format(chineseDateLayout)
 		ret[i].Desc = u.Desc
 	}
 	return ret, nil
@@ -190,6 +194,17 @@ func setUserInfo(id int, nick, desc, avtr *string) error {
 		a = ""
 	}
 	return global.UserDB.UpdateUserInfo(id, user.Name, n, a, d)
+}
+
+func setUserRole(id int, role global.UserRole, opname string) error {
+	if !role.IsVaild() {
+		return errInvalidRole
+	}
+	user, err := global.UserDB.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	return global.UserDB.UpdateUserRole(*user.ID, role, opname)
 }
 
 func resetPassword(ip, name, mobile string) error {

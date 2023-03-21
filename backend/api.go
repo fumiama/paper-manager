@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fumiama/paper-manager/backend/global"
 	"github.com/fumiama/paper-manager/backend/utils"
 )
 
@@ -236,6 +237,73 @@ func init() {
 			M string `json:"msg"`
 		}
 		writeresult(w, codeSuccess, &message{M: "成功"}, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/setRole"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setrolebody struct {
+			ID   int             `json:"id"`
+			Role global.UserRole `json:"role"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		if !user.IsSuper() {
+			writeresult(w, codeError, nil, errNoSetRolePermission.Error(), typeError)
+			return
+		}
+		var body setrolebody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		if body.ID == *user.ID {
+			writeresult(w, codeError, nil, "cannot set self", typeError)
+			return
+		}
+		err = setUserRole(body.ID, body.Role, user.Name)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/disableUser"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type disableuserbody struct {
+			ID int `json:"id"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		if !user.IsSuper() {
+			writeresult(w, codeError, nil, errNoSetRolePermission.Error(), typeError)
+			return
+		}
+		var body disableuserbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		if body.ID == *user.ID {
+			writeresult(w, codeError, nil, "cannot disbale self", typeError)
+			return
+		}
+		err = global.UserDB.DisableUser(body.ID, user.Name)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
 	}}
 
 	apimap["/api/resetPassword"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {

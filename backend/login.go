@@ -24,6 +24,7 @@ var (
 	errEmptySalt           = errors.New("empty salt")
 	errWrongPassword       = errors.New("invalid username or password")
 	errTooManyFailedLogins = errors.New("too many failed logins")
+	errAccountIsDisabled   = errors.New("account is disabled")
 )
 
 const (
@@ -118,6 +119,9 @@ func login(username, challenge string) (*loginResult, error) {
 	user, err := global.UserDB.GetUserByName(username)
 	if err != nil {
 		return nil, err
+	}
+	if user.Pswd == "" {
+		return nil, errAccountIsDisabled
 	}
 	h := md5.New()
 	h.Write(base14.StringToBytes(user.Pswd))

@@ -14,9 +14,14 @@ const (
 	RoleSuper
 	RoleFileManager
 	RoleUser
+	RoleTop
 )
 
 type UserRole uint8
+
+func (r UserRole) IsVaild() bool {
+	return r > RoleNil && r < RoleTop
+}
 
 func (r UserRole) String() string {
 	switch r {
@@ -27,7 +32,7 @@ func (r UserRole) String() string {
 	case RoleUser:
 		return "user"
 	}
-	return "nil"
+	return "invalid"
 }
 
 func (r UserRole) Nick() string {
@@ -39,7 +44,7 @@ func (r UserRole) Nick() string {
 	case RoleUser:
 		return "课程组员"
 	}
-	return "nil"
+	return "非法角色"
 }
 
 const (
@@ -156,7 +161,7 @@ func (u *UserDatabase) AddUser(user *User, opname string) error {
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("创建了账号", opname, *nu.ID)
+	return u.SendMessage(opname+"创建了账号", opname, *nu.ID)
 }
 
 // UpdateUserInfo ...
@@ -180,7 +185,7 @@ func (u *UserDatabase) UpdateUserInfo(id int, opname, nick, avtr, desc string) e
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("更新了个人信息", opname, *user.ID)
+	return u.SendMessage(opname+"更新了个人信息", opname, *user.ID)
 }
 
 // UpdateUserRole ...
@@ -199,7 +204,25 @@ func (u *UserDatabase) UpdateUserRole(id int, nr UserRole, opname string) error 
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("您的权限被变更为"+user.Role.Nick(), opname, *user.ID)
+	return u.SendMessage("您的权限被"+opname+"变更为"+user.Role.Nick(), opname, *user.ID)
+}
+
+// DisableUser ...
+func (u *UserDatabase) DisableUser(id int, opname string) error {
+	user, err := u.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	user.Last = time.Now().Unix()
+	user.Pswd = ""
+	_ = u.SendMessage("账户被"+opname+"禁用", opname, *user.ID)
+	u.mu.Lock()
+	err = u.db.Insert(UserTableUser, &user)
+	u.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	return u.SendMessage(user.Name+"的账户被"+opname+"禁用", opname, *user.ID)
 }
 
 // UpdateUserPassword ...
@@ -220,7 +243,7 @@ func (u *UserDatabase) UpdateUserPassword(id int, opname, npwd string) error {
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("更新了密码", opname, *user.ID)
+	return u.SendMessage(opname+"更新了密码", opname, *user.ID)
 }
 
 // UpdateUserContact ...
@@ -240,7 +263,7 @@ func (u *UserDatabase) UpdateUserContact(id int, opname, ncont string) error {
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("更新了联系方式", opname, *user.ID)
+	return u.SendMessage(opname+"更新了联系方式", opname, *user.ID)
 }
 
 // GetUserByName avoids sql injection by limiting username to 0-9A-Za-z
@@ -304,7 +327,9 @@ func (u *UserDatabase) GetUsers() (users []User, err error) {
 	users = make([]User, n)
 	i := 0
 	err = u.db.FindFor(UserTableUser, &user, "", func() error {
-		user.Pswd = ""
+		if user.Pswd != "" {
+			user.Pswd = "-"
+		}
 		users[i] = user
 		i++
 		if i > n {

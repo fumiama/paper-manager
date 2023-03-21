@@ -25,6 +25,9 @@
             field: 'name',
             label: '用户名',
             component: 'Input',
+            ifShow: () => {
+              return !unref(isUpdate)
+            },
             rules: [
               {
                 required: true,
