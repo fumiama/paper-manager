@@ -769,6 +769,7 @@ func (u *UserDatabase) GetAnnualAPIVisitCount() (cnts [12]uint32) {
 		_ = u.db.Find(UserTableMonthlyAPIVisit, &v, "WHERE YM="+strconv.FormatUint(uint64(ym), 10))
 		cnts[i] = v.Count
 		i++
+		v.Count = 0
 	}
 	return
 }

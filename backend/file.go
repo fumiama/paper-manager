@@ -13,12 +13,6 @@ func FileHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.IsMethod("GET", w, r) {
 		return
 	}
-	token := r.Header.Get("Authorization")
-	user := usertokens.Get(token)
-	if user == nil {
-		writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
-		return
-	}
 	global.UserDB.VisitAPI()
 	if r.URL.Path[0] != '/' {
 		r.URL.Path = "/" + r.URL.Path

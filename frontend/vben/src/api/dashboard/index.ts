@@ -5,6 +5,11 @@ enum Api {
   GetMessageList = '/getMessageList',
   AcceptMessage = '/acceptMessage',
   DeleteMessage = '/delMessage',
+  GetAnnualVisits = '/getAnnualVisits',
+}
+
+export const getAnnualVisits = () => {
+  return defHttp.get<number[]>({ url: Api.GetAnnualVisits })
 }
 
 export const getMessageList = () => {

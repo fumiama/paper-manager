@@ -4,6 +4,7 @@
 <script lang="ts" setup>
   import { onMounted, ref, Ref } from 'vue'
   import { useECharts } from '/@/hooks/web/useECharts'
+  import { getAnnualVisits } from '/@/api/dashboard'
 
   defineProps({
     width: {
@@ -18,6 +19,10 @@
 
   const chartRef = ref<HTMLDivElement | null>(null)
   const { setOptions } = useECharts(chartRef as Ref<HTMLDivElement>)
+  const visitsRef = ref([...new Array(12)])
+  getAnnualVisits().then((visits) => {
+    visitsRef.value = visits
+  })
   onMounted(() => {
     setOptions({
       tooltip: {
@@ -40,7 +45,7 @@
       },
       series: [
         {
-          data: [3000, 2000, 3333, 5000, 3200, 4200, 3200, 2100, 3000, 5100, 6000, 3200, 4800],
+          data: visitsRef as any,
           type: 'bar',
           barMaxWidth: 80,
         },

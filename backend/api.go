@@ -375,6 +375,20 @@ func init() {
 		}
 		writeresult(w, codeSuccess, "成功", messageOk, typeSuccess)
 	}}
+
+	apimap["/api/getAnnualVisits"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		if !user.IsSuper() {
+			writeresult(w, codeError, nil, errNoSetRolePermission.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, global.UserDB.GetAnnualAPIVisitCount(), messageOk, typeSuccess)
+	}}
 }
 
 // APIHandler serves all backend /api call
