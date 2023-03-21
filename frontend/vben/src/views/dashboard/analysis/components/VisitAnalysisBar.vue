@@ -1,15 +1,19 @@
 <template>
   <div ref="chartRef" :style="{ height, width }"></div>
 </template>
-<script lang="ts">
-  import { basicProps } from './props'
-</script>
 <script lang="ts" setup>
   import { onMounted, ref, Ref } from 'vue'
   import { useECharts } from '/@/hooks/web/useECharts'
 
   defineProps({
-    ...basicProps,
+    width: {
+      type: String as PropType<string>,
+      default: '100%',
+    },
+    height: {
+      type: String as PropType<string>,
+      default: '280px',
+    },
   })
 
   const chartRef = ref<HTMLDivElement | null>(null)
@@ -25,14 +29,13 @@
           },
         },
       },
-      grid: { left: '1%', right: '1%', top: '2  %', bottom: 0, containLabel: true },
+      grid: { left: '1%', right: '1%', top: '2%', bottom: 0, containLabel: true },
       xAxis: {
         type: 'category',
         data: [...new Array(12)].map((_item, index) => `${index + 1}月`),
       },
       yAxis: {
         type: 'value',
-        max: 8000,
         splitNumber: 4,
       },
       series: [

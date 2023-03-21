@@ -384,6 +384,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h, ok := apimap[r.URL.Path]; ok {
+		global.UserDB.VisitAPI()
 		h.handle(w, r)
 		return
 	}

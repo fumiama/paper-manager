@@ -33,6 +33,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
 		return
 	}
+	global.UserDB.VisitAPI()
 	ff, h, err := r.FormFile("avatar")
 	if err == nil {
 		defer ff.Close()
