@@ -30,7 +30,7 @@ enum Api {
   GetUsersList = '/getUsersList',
   IsNameExist = '/isNameExist',
   SetRole = '/setRole',
-  SetStatus = '/setStatus',
+  DisableUser = '/disableUser',
 }
 
 /**
@@ -166,7 +166,7 @@ export function doLogout() {
 }
 
 export const setRole = (id: number, role: number) =>
-  defHttp.post({ url: Api.SetRole, params: { id, role } })
+  defHttp.post({ url: Api.SetRole, params: { id, role } }, { errorMessageMode: 'none' })
 
-export const setStatus = (id: number, stat: boolean) =>
-  defHttp.post({ url: Api.SetStatus, params: { id, stat } })
+export const disableUser = (id: number, stat: boolean) =>
+  defHttp.post({ url: Api.DisableUser, params: { id, stat } }, { errorMessageMode: 'none' })

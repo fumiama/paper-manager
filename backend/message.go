@@ -37,18 +37,17 @@ func getMessageList(token string) ([]messageList, error) {
 	am := make(map[string]string, 64)
 	for i, m := range ms {
 		avtr := ""
-		if a, ok := am[m.Name]; ok {
+		n := m.Name
+		if n == "" {
+			n = m.Cont
+		}
+		if a, ok := am[n]; ok {
 			avtr = a
 		} else {
-			var u global.User
-			if m.Name != "" {
-				u, err = global.UserDB.GetUserByName(m.Name)
-			} else if m.Cont != "" {
-				u, err = global.UserDB.GetUserByName(m.Cont)
-			}
+			u, err := global.UserDB.GetUserByName(n)
 			if err == nil {
 				avtr = u.Avtr
-				am[m.Name] = u.Avtr
+				am[n] = u.Avtr
 			}
 		}
 		ml[i].ID = *m.ID

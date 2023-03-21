@@ -3,7 +3,7 @@ import { FormSchema } from '/@/components/Table'
 import { h } from 'vue'
 import { Switch } from 'ant-design-vue'
 import { useMessage } from '/@/hooks/web/useMessage'
-import { setStatus } from '/@/api/sys/user'
+import { disableUser } from '/@/api/sys/user'
 
 export const columns: BasicColumn[] = [
   {
@@ -37,7 +37,7 @@ export const columns: BasicColumn[] = [
             return
           }
           record.pendingStatus = true
-          setStatus(record.id, checked)
+          disableUser(record.id, checked)
             .then(() => {
               record.stat = checked
               createMessage.success(`已成功禁用账户并清空密码, 如需重新启用, 请让用户找回密码`)

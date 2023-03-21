@@ -46,6 +46,7 @@
   const { createMessage } = useMessage()
   getMessageList().then((value) => {
     if (value) dynamicInfoItemsRef.value = value
+    else dynamicInfoItemsRef.value = []
   })
   async function accept(id: number) {
     try {

@@ -153,15 +153,12 @@ func (u *UserDatabase) AddUser(user *User, opname string) error {
 	if err != nil {
 		return err
 	}
-	err = u.notifyUserAdded(opname, user.Name)
-	if err != nil {
-		return err
-	}
 	nu, err := u.GetUserByName(user.Name)
 	if err != nil {
 		return err
 	}
-	return u.SendMessage(opname+"创建了账号", opname, *nu.ID)
+	_ = u.notifyUserAdded(opname, user.Name, *nu.ID)
+	return u.SendMessage(opname+" 创建了您的账号", opname, *nu.ID)
 }
 
 // UpdateUserInfo ...
@@ -185,7 +182,10 @@ func (u *UserDatabase) UpdateUserInfo(id int, opname, nick, avtr, desc string) e
 	if err != nil {
 		return err
 	}
-	return u.SendMessage(opname+"更新了个人信息", opname, *user.ID)
+	if opname != user.Name {
+		return u.SendMessage(opname+" 更新了您的个人信息", opname, *user.ID)
+	}
+	return u.SendMessage("更新了个人信息", opname, *user.ID)
 }
 
 // UpdateUserRole ...
@@ -197,6 +197,9 @@ func (u *UserDatabase) UpdateUserRole(id int, nr UserRole, opname string) error 
 	if err != nil {
 		return err
 	}
+	if opname == user.Name {
+		return ErrInvalidName
+	}
 	user.Role = nr
 	u.mu.Lock()
 	err = u.db.Insert(UserTableUser, &user)
@@ -204,7 +207,8 @@ func (u *UserDatabase) UpdateUserRole(id int, nr UserRole, opname string) error 
 	if err != nil {
 		return err
 	}
-	return u.SendMessage("您的权限被"+opname+"变更为"+user.Role.Nick(), opname, *user.ID)
+	_ = u.SendMessage("您的权限被 "+opname+" 变更为 "+user.Role.Nick(), opname, *user.ID)
+	return u.notifyUpdateUserRole(user.Name, opname, nr, *user.ID)
 }
 
 // DisableUser ...
@@ -213,16 +217,19 @@ func (u *UserDatabase) DisableUser(id int, opname string) error {
 	if err != nil {
 		return err
 	}
+	if opname == user.Name {
+		return ErrInvalidName
+	}
 	user.Last = time.Now().Unix()
 	user.Pswd = ""
-	_ = u.SendMessage("账户被"+opname+"禁用", opname, *user.ID)
 	u.mu.Lock()
 	err = u.db.Insert(UserTableUser, &user)
 	u.mu.Unlock()
 	if err != nil {
 		return err
 	}
-	return u.SendMessage(user.Name+"的账户被"+opname+"禁用", opname, *user.ID)
+	_ = u.SendMessage("您的账户被 "+opname+" 禁用", opname, *user.ID)
+	return u.notifyDisableUser(user.Name, opname, *user.ID)
 }
 
 // UpdateUserPassword ...
@@ -236,14 +243,17 @@ func (u *UserDatabase) UpdateUserPassword(id int, opname, npwd string) error {
 	}
 	user.Last = time.Now().Unix()
 	user.Pswd = npwd
-	_ = u.notifyPasswordChange(user.Name, npwd)
 	u.mu.Lock()
 	err = u.db.Insert(UserTableUser, &user)
 	u.mu.Unlock()
 	if err != nil {
 		return err
 	}
-	return u.SendMessage(opname+"更新了密码", opname, *user.ID)
+	_ = u.notifyPasswordChange(user.Name, npwd, opname, *user.ID)
+	if user.Name != opname {
+		return u.SendMessage(opname+" 更新了您的密码", opname, *user.ID)
+	}
+	return u.SendMessage("更新了密码", opname, *user.ID)
 }
 
 // UpdateUserContact ...
@@ -256,14 +266,17 @@ func (u *UserDatabase) UpdateUserContact(id int, opname, ncont string) error {
 		return err
 	}
 	user.Cont = ncont
-	_ = u.notifyContactChange(user.Name, ncont)
 	u.mu.Lock()
 	err = u.db.Insert(UserTableUser, &user)
 	u.mu.Unlock()
 	if err != nil {
 		return err
 	}
-	return u.SendMessage(opname+"更新了联系方式", opname, *user.ID)
+	_ = u.notifyContactChange(user.Name, ncont, *user.ID)
+	if user.Name != opname {
+		return u.SendMessage(opname+" 更新了您的联系方式", opname, *user.ID)
+	}
+	return u.SendMessage("更新了联系方式", opname, *user.ID)
 }
 
 // GetUserByName avoids sql injection by limiting username to 0-9A-Za-z
@@ -413,7 +426,7 @@ func (u *UserDatabase) SendMessage(text, opname string, to int) error {
 	m := Message{ToID: to, Date: time.Now().Unix(), Text: text, Cont: opname, Pswd: "opname"}
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return u.db.InsertUnique(UserTableMessage, m)
+	return u.db.InsertUnique(UserTableMessage, &m)
 }
 
 // NotifyRegister will send register notification to all supers
@@ -511,7 +524,7 @@ func (u *UserDatabase) NotifyResetPassword(ip, name, cont string) error {
 }
 
 // notifyUserAdded will send notification to all supers
-func (u *UserDatabase) notifyUserAdded(opname, name string) error {
+func (u *UserDatabase) notifyUserAdded(opname, name string, nuid int) error {
 	if opname == "" || name == "" {
 		return ErrEmptyName
 	}
@@ -523,12 +536,15 @@ func (u *UserDatabase) notifyUserAdded(opname, name string) error {
 
 	m := Message{
 		Date: time.Now().Unix(),
-		Text: opname + "添加了用户 " + name,
+		Text: opname + " 添加了用户 " + name,
 		Cont: opname,
 	}
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	for _, to := range tos {
+		if nuid == to {
+			continue
+		}
 		m.ToID = to
 		err = u.db.InsertUnique(UserTableMessage, &m)
 		if err != nil {
@@ -539,7 +555,7 @@ func (u *UserDatabase) notifyUserAdded(opname, name string) error {
 }
 
 // notifyContactChange will send notification to all supers
-func (u *UserDatabase) notifyContactChange(name, cont string) error {
+func (u *UserDatabase) notifyContactChange(name, cont string, id int) error {
 	if name == "" {
 		return ErrEmptyName
 	}
@@ -561,6 +577,9 @@ func (u *UserDatabase) notifyContactChange(name, cont string) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	for _, to := range tos {
+		if id == to {
+			continue
+		}
 		m.ToID = to
 		err = u.db.InsertUnique(UserTableMessage, &m)
 		if err != nil {
@@ -571,7 +590,7 @@ func (u *UserDatabase) notifyContactChange(name, cont string) error {
 }
 
 // notifyPasswordChange will send notification to all supers
-func (u *UserDatabase) notifyPasswordChange(name, npwd string) error {
+func (u *UserDatabase) notifyPasswordChange(name, npwd, opname string, id int) error {
 	if name == "" {
 		return ErrEmptyName
 	}
@@ -583,13 +602,80 @@ func (u *UserDatabase) notifyPasswordChange(name, npwd string) error {
 
 	m := Message{
 		Date: time.Now().Unix(),
-		Text: "用户 " + name + " 更改了密码",
+		Text: "用户 " + name + " 被 " + opname + " 更改了密码",
 		Name: name,
 		Pswd: npwd,
 	}
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	for _, to := range tos {
+		if id == to {
+			continue
+		}
+		m.ToID = to
+		err = u.db.InsertUnique(UserTableMessage, &m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// notifyPasswordChange will send notification to all supers
+func (u *UserDatabase) notifyUpdateUserRole(name, opname string, role UserRole, id int) error {
+	if name == "" || opname == "" {
+		return ErrEmptyName
+	}
+
+	tos, err := u.GetSuperIDs()
+	if err != nil {
+		return err
+	}
+
+	m := Message{
+		Date: time.Now().Unix(),
+		Text: name + " 的权限被 " + opname + " 变更为 " + role.Nick(),
+		Cont: opname,
+		Pswd: "opname",
+	}
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	for _, to := range tos {
+		if id == to {
+			continue
+		}
+		m.ToID = to
+		err = u.db.InsertUnique(UserTableMessage, &m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// notifyPasswordChange will send notification to all supers
+func (u *UserDatabase) notifyDisableUser(name, opname string, id int) error {
+	if name == "" || opname == "" {
+		return ErrEmptyName
+	}
+
+	tos, err := u.GetSuperIDs()
+	if err != nil {
+		return err
+	}
+
+	m := Message{
+		Date: time.Now().Unix(),
+		Text: name + " 的账户被 " + opname + " 禁用",
+		Cont: opname,
+		Pswd: "opname",
+	}
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	for _, to := range tos {
+		if id == to {
+			continue
+		}
 		m.ToID = to
 		err = u.db.InsertUnique(UserTableMessage, &m)
 		if err != nil {
