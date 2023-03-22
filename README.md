@@ -44,6 +44,29 @@
 	</tr>
 </table>
 
+### 个人设置 /settings
+
+<img align="right" src="https://user-images.githubusercontent.com/41315874/226120888-ce79c227-7f0f-4681-ab74-99ce4433d768.png" alt="settings" />
+
+个人设置位于右上角状态栏头像的下拉列表中，点击后即可对用户自己的信息进行设置。
+#### 基本设置
+对用户的昵称、个人简介与头像进行自定义设置。
+> 上传头像时访问`/upload`
+
+> 保存设置时访问`/api/setUserInfo`
+
+![base setting](https://user-images.githubusercontent.com/41315874/226120541-e2cc77e7-6601-49bb-8f8e-fe6d348f210b.png)
+
+#### 安全设置
+对用户的密码、联系方式进行修改。
+- **密码**：导航至`/settings/password`进行设置，成功后将自动退出当前登录，同时在系统消息中通知课程组长。
+- **联系方式**：导航至`/settings/contact`进行设置，成功后会在系统消息中通知课程组长。
+> 设置密码时访问`/api/setPassword`
+
+> 设置联系方式时访问`/api/setContact`
+
+![secure setting](https://user-images.githubusercontent.com/41315874/226120560-83a8fa95-f2db-4202-8aee-a99c32b55b43.png)
+
 ### 注销
 
 <img align="right" src="https://user-images.githubusercontent.com/41315874/226120865-9f8d57bf-3884-420e-9ff6-008f50fb52d6.png" alt="logout" />
@@ -52,10 +75,18 @@
 > 注销时访问`/api/logout`
 
 ### 仪表板/分析页 /dashboard/analysis
-向课程组长展示近一年的访问量信息。
+此页仅课程组长可见，向课程组长展示近一年的访问量信息。
 > 载入时访问`/api/getAnnualVisits`
 
 ![analysis](https://user-images.githubusercontent.com/41315874/226802920-f6b43a7b-6191-4dcb-9f48-364c161c1cfd.png)
+
+### 仪表板/用户管理
+此页仅课程组长可见，提供用户管理功能。
+> 载入时访问`/api/getUsersList`
+
+> 禁用账户时访问`/api/disableUser`
+
+> 设置用户权限时访问`/api/setRole`
 
 ### 仪表板/工作台 /dashboard/workbench
 显示用户收到的消息，用户可以选择`删除`已读消息。对于课程组长，还提供对`注册`和`重置密码`消息的快捷处理按钮`接受`，可以快速执行相应操作。下面是一个演示。
@@ -87,28 +118,6 @@
 
 ![workbench demo 5](https://user-images.githubusercontent.com/41315874/226806212-8ad2406c-2172-4a58-a0c9-7d65081dd3e8.png)
 
-### 个人设置 /settings
-
-<img align="right" src="https://user-images.githubusercontent.com/41315874/226120888-ce79c227-7f0f-4681-ab74-99ce4433d768.png" alt="settings" />
-
-个人设置位于右上角状态栏头像的下拉列表中，点击后即可对用户自己的信息进行设置。
-#### 基本设置
-对用户的昵称、个人简介与头像进行自定义设置。
-> 上传头像时访问`/upload`
-
-> 保存设置时访问`/api/setUserInfo`
-
-![base setting](https://user-images.githubusercontent.com/41315874/226120541-e2cc77e7-6601-49bb-8f8e-fe6d348f210b.png)
-
-#### 安全设置
-对用户的密码、联系方式进行修改。
-- **密码**：导航至`/settings/password`进行设置，成功后将自动退出当前登录，同时在系统消息中通知课程组长。
-- **联系方式**：导航至`/settings/contact`进行设置，成功后会在系统消息中通知课程组长。
-> 设置密码时访问`/api/setPassword`
-
-> 设置联系方式时访问`/api/setContact`
-
-![secure setting](https://user-images.githubusercontent.com/41315874/226120560-83a8fa95-f2db-4202-8aee-a99c32b55b43.png)
 
 ### 试卷库 /filelist
 
