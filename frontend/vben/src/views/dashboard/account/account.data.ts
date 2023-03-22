@@ -1,5 +1,4 @@
 import { BasicColumn } from '/@/components/Table'
-import { FormSchema } from '/@/components/Table'
 import { h } from 'vue'
 import { Switch } from 'ant-design-vue'
 import { useMessage } from '/@/hooks/web/useMessage'
@@ -65,20 +64,5 @@ export const columns: BasicColumn[] = [
   {
     title: '简介',
     dataIndex: 'desc',
-  },
-]
-
-export const searchFormSchema: FormSchema[] = [
-  {
-    field: 'name',
-    label: '用户名',
-    component: 'Input',
-    colProps: { span: 8 },
-  },
-  {
-    field: 'nick',
-    label: '昵称',
-    component: 'Input',
-    colProps: { span: 8 },
   },
 ]

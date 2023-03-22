@@ -40,6 +40,15 @@ export interface SetUserInfoParams {
 }
 
 /**
+ * @description: Set Others' Info interface parameters
+ */
+export interface SetOthersInfoParams {
+  id: number
+  nick: string
+  desc: string
+}
+
+/**
  * @description: Register interface parameters
  */
 export interface RegisterParams {

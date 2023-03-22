@@ -3,7 +3,9 @@ package backend
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -72,16 +74,6 @@ func getUserInfo(token string) (*getUserInfoResult, error) {
 		Last:    time.Unix(user.Last, 0).Format(chineseDateLayout),
 		Contact: hideContact(user.Cont),
 	}, nil
-}
-
-func logout(token string) error {
-	user := usertokens.Get(token)
-	if user == nil {
-		return errInvalidToken
-	}
-	loginstatus.Delete(user.Name)
-	usertokens.Delete(token)
-	return nil
 }
 
 func getUsersCount(token string) (int, error) {
@@ -196,6 +188,25 @@ func setUserInfo(id int, nick, desc, avtr *string) error {
 	return global.UserDB.UpdateUserInfo(id, user.Name, n, a, d)
 }
 
+// setOthersInfo may change the arguments
+func setOthersInfo(id int, opname, nick, desc string) error {
+	user, err := global.UserDB.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	if nick == user.Nick {
+		nick = ""
+	} else if nick != "" {
+		user.Nick = nick
+	}
+	if desc == user.Desc {
+		desc = ""
+	} else if desc != "" {
+		user.Desc = desc
+	}
+	return global.UserDB.UpdateUserInfo(id, opname, nick, "", desc)
+}
+
 func setUserRole(id int, role global.UserRole, opname string) error {
 	if !role.IsVaild() {
 		return errInvalidRole
@@ -203,6 +214,9 @@ func setUserRole(id int, role global.UserRole, opname string) error {
 	user, err := global.UserDB.GetUserByID(id)
 	if err != nil {
 		return err
+	}
+	if role == user.Role {
+		return nil
 	}
 	return global.UserDB.UpdateUserRole(*user.ID, role, opname)
 }
@@ -216,4 +230,257 @@ func resetPassword(ip, name, mobile string) error {
 	}
 	registerlimit.Set(ip, true)
 	return global.UserDB.NotifyResetPassword(ip, name, mobile)
+}
+
+func init() {
+	apimap["/api/getUserInfo"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		ret, err := getUserInfo(token)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, ret, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/getUsersCount"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		n, err := getUsersCount(token)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, n, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/getUsersList"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		ret, err := getUsersList(token)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, &ret, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/isNameExist"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		name := r.URL.Query().Get("username")
+		if name == "" {
+			writeresult(w, codeError, nil, "empty username", typeError)
+			return
+		}
+		yes, err := isNameExist(token, name)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, yes, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/setPassword"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setpasswordbody struct {
+			Token    string `json:"token"`
+			Password string `json:"password"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body setpasswordbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		err = setUserPassword(*user.ID, body.Token, body.Password)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "成功, 请重新登录"}, messageOk, typeSuccess)
+		_ = logout(token)
+	}}
+
+	apimap["/api/setContact"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setcontactbody struct {
+			Token   string `json:"token"`
+			Contact string `json:"contact"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body setcontactbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		err = setUserContact(*user.ID, body.Token, body.Contact)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		user.Cont = hideContact(body.Contact)
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "成功, 已将消息报告给课程组长"}, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/setUserInfo"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setuserinfobody struct {
+			ID   int    `json:"id"`
+			Nick string `json:"nick"`
+			Desc string `json:"desc"`
+			Avtr string `json:"avtr"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body setuserinfobody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		type message struct {
+			M string `json:"msg"`
+		}
+		if body.ID != 0 {
+			if !user.IsSuper() {
+				writeresult(w, codeError, nil, "no permission to set others' info", typeError)
+				return
+			}
+			err = setOthersInfo(body.ID, user.Name, body.Nick, body.Desc)
+			if err != nil {
+				writeresult(w, codeError, nil, err.Error(), typeError)
+				return
+			}
+			writeresult(w, codeSuccess, &message{M: "成功"}, messageOk, typeSuccess)
+			return
+		}
+		err = setUserInfo(*user.ID, &body.Nick, &body.Desc, &body.Avtr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		user.Nick = body.Nick
+		user.Desc = body.Desc
+		user.Avtr = body.Avtr
+		writeresult(w, codeSuccess, &message{M: "成功"}, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/setRole"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type setrolebody struct {
+			ID   int             `json:"id"`
+			Role global.UserRole `json:"role"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		if !user.IsSuper() {
+			writeresult(w, codeError, nil, errNoSetRolePermission.Error(), typeError)
+			return
+		}
+		var body setrolebody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		if body.ID == *user.ID {
+			writeresult(w, codeError, nil, "cannot set self", typeError)
+			return
+		}
+		err = setUserRole(body.ID, body.Role, user.Name)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/disableUser"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type disableuserbody struct {
+			ID int `json:"id"`
+		}
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		if !user.IsSuper() {
+			writeresult(w, codeError, nil, errNoSetRolePermission.Error(), typeError)
+			return
+		}
+		var body disableuserbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		if body.ID == *user.ID {
+			writeresult(w, codeError, nil, "cannot disbale self", typeError)
+			return
+		}
+		err = global.UserDB.DisableUser(body.ID, user.Name)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/resetPassword"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type resetpwdbody struct {
+			Username string `json:"username"`
+			Mobile   string `json:"mobile"`
+		}
+		if r.Header.Get("Authorization") != "" {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var body resetpwdbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		ip := r.RemoteAddr
+		i := strings.LastIndex(ip, ":")
+		if i >= 0 {
+			ip = ip[:i]
+		}
+		err = resetPassword(ip, body.Username, body.Mobile)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		type message struct {
+			M string `json:"msg"`
+		}
+		writeresult(w, codeSuccess, &message{M: "已上报, 请耐心等待通知"}, messageOk, typeSuccess)
+	}}
 }

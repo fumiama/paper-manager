@@ -7,6 +7,7 @@ import {
   SetPasswordParams,
   SetContactParams,
   SetUserInfoParams,
+  SetOthersInfoParams,
   RegisterParams,
   ResetPasswordResultModel,
   RegisterResultModel,
@@ -109,6 +110,21 @@ export function setUserInfoApi(params: SetUserInfoParams, mode: ErrorMessageMode
 }
 
 /**
+ * @description: set userinfo api, borrowing the ResetPasswordResultModel as they're the same
+ */
+export function setOthersInfoApi(params: SetOthersInfoParams, mode: ErrorMessageMode = 'modal') {
+  return defHttp.post<ResetPasswordResultModel>(
+    {
+      url: Api.SetUserInfo,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+    },
+  )
+}
+
+/**
  * @description: register api
  */
 export function registerApi(params: RegisterParams, mode: ErrorMessageMode = 'modal') {
@@ -166,7 +182,7 @@ export function doLogout() {
 }
 
 export const setRole = (id: number, role: number) =>
-  defHttp.post({ url: Api.SetRole, params: { id, role } }, { errorMessageMode: 'none' })
+  defHttp.post({ url: Api.SetRole, params: { id, role } })
 
 export const disableUser = (id: number, stat: boolean) =>
   defHttp.post({ url: Api.DisableUser, params: { id, stat } }, { errorMessageMode: 'none' })

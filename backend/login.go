@@ -5,8 +5,10 @@ import (
 	crand "crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"math/rand"
+	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -146,4 +148,59 @@ func login(username, challenge string) (*loginResult, error) {
 		RealName: user.Nick,
 		Desc:     user.Desc,
 	}, nil
+}
+
+func logout(token string) error {
+	user := usertokens.Get(token)
+	if user == nil {
+		return errInvalidToken
+	}
+	loginstatus.Delete(user.Name)
+	usertokens.Delete(token)
+	return nil
+}
+
+func init() {
+	apimap["/api/getLoginSalt"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		username := r.URL.Query().Get("username")
+		if username == "" {
+			writeresult(w, codeError, nil, "empty username", typeError)
+			return
+		}
+		salt, err := getLoginSalt(username)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, salt, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/login"] = &apihandler{"POST", func(w http.ResponseWriter, r *http.Request) {
+		type loginbody struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+		var body loginbody
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		ret, err := login(body.Username, body.Password)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, ret, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/logout"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		err := logout(r.Header.Get("Authorization"))
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, nil, messageOk, typeSuccess)
+	}}
 }
