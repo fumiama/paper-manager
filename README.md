@@ -38,6 +38,10 @@
 > 注销时将访问`/api/logout`
 
 ### 仪表板/分析页 /dashboard/analysis
+向课程组长显示近一年的访问量信息。
+> 将访问`/api/getAnnualVisits`
+
+![analysis](https://user-images.githubusercontent.com/41315874/226802920-f6b43a7b-6191-4dcb-9f48-364c161c1cfd.png)
 
 ### 仪表板/工作台 /dashboard/workbench
 
