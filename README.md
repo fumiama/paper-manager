@@ -51,21 +51,24 @@
 
 ### 仪表板/分析页 /dashboard/analysis
 向课程组长展示近一年的访问量信息。
-> 将访问`/api/getAnnualVisits`
+> 载入是将访问`/api/getAnnualVisits`
 
 ![analysis](https://user-images.githubusercontent.com/41315874/226802920-f6b43a7b-6191-4dcb-9f48-364c161c1cfd.png)
 
 ### 仪表板/工作台 /dashboard/workbench
 显示用户收到的消息，用户可以选择`删除`已读消息。对于课程组长，还提供对`注册`和`重置密码`消息的快捷处理按钮`接受`，可以快速执行相应操作。
+> 载入时访问`/api/getUsersCount` `/api/getMessageList`
+
+> 处理消息时访问`/api/acceptMessage` `/api/delMessage`
 #### 1. 课程组长工作台
 > 登入系统，修改了自己的信息，又收到了两个用户的注册请求
 
-![workbench demo 1](https://user-images.githubusercontent.com/41315874/226805939-8d007980-c5da-4047-9c0b-ccf7c14ffe8e.png)
+![workbench demo 1](https://user-images.githubusercontent.com/41315874/226808521-92b2a857-4b56-4185-b654-759e2d43d415.png)
 
 #### 2. 课程组长工作台
 > 接受2人注册请求
 
-![workbench demo 2](https://user-images.githubusercontent.com/41315874/226806044-fe721597-f1d5-4c01-854a-2b945fbbeb47.png)
+![workbench demo 2](https://user-images.githubusercontent.com/41315874/226808582-ebea1c32-a69f-4054-8b46-8f3f5799eb9f.png)
 
 #### 3. A老师(filemgr)工作台
 > 课程组长接受注册申请后，更改了个人信息
