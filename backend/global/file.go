@@ -26,6 +26,17 @@ func (pt PaperType) AB() byte {
 	}
 }
 
+func (pt PaperType) SetAB(x byte) PaperType {
+	n := PaperType(0)
+	switch x {
+	case 'A':
+		n = 1
+	case 'B':
+		n = 2
+	}
+	return pt | n
+}
+
 // MiddleFinal default 平时
 func (pt PaperType) MiddleFinal() string {
 	switch (pt & 0xf0) >> 4 {
@@ -36,6 +47,17 @@ func (pt PaperType) MiddleFinal() string {
 	default:
 		return "平时"
 	}
+}
+
+func (pt PaperType) SetMiddleFinal(x string) PaperType {
+	n := PaperType(0)
+	switch x {
+	case "期中":
+		n = 1 << 4
+	case "期末":
+		n = 2 << 4
+	}
+	return pt | n
 }
 
 // FirstSecond default is 年度
@@ -50,6 +72,17 @@ func (pt PaperType) FirstSecond() string {
 	}
 }
 
+func (pt PaperType) SetFirstSecond(x string) PaperType {
+	n := PaperType(0)
+	switch x {
+	case "第1学期":
+		n = 1 << 8
+	case "第2学期":
+		n = 2 << 8
+	}
+	return pt | n
+}
+
 // OpenClose default 闭卷
 func (pt PaperType) OpenClose() string {
 	switch (pt & 0xf000) >> 12 {
@@ -62,6 +95,19 @@ func (pt PaperType) OpenClose() string {
 	default:
 		return "闭卷"
 	}
+}
+
+func (pt PaperType) SetOpenClose(x string) PaperType {
+	n := PaperType(0)
+	switch x {
+	case "开卷":
+		n = 1 << 12
+	case "一页纸开卷":
+		n = 2 << 12
+	case "闭卷":
+		n = 3 << 12
+	}
+	return pt | n
 }
 
 // StudyYear 学年
@@ -79,6 +125,10 @@ func init() {
 		panic(err)
 	}
 	err = FileDB.db.Create(FileTableFile, &File{})
+	if err != nil {
+		panic(err)
+	}
+	err = FileDB.db.Create(FileTableQuestion, &Question{})
 	if err != nil {
 		panic(err)
 	}
@@ -114,6 +164,7 @@ func (f *FileDatabase) AddFile() {}
 type QuestionJSON struct {
 	Name   string         `json:"name"`   // Name is name or Question ID
 	Points int            `json:"points"` // Points is sum of subs' points or self
+	Rate   float64        `json:"rate"`   // Rate is the avg(non-leaf) or max(leaf) similarity
 	Sub    []QuestionJSON `json:"sub,omitempty"`
 }
 
@@ -122,12 +173,13 @@ type Question struct {
 	Plain  string // Plain is the plain text of the question (like markdown format)
 	XML    []byte // XML is the OpenXML bytes of the question
 	Images []byte // Images is json of the image paths in XML, ex. ['md5.jpg', 'md5.png', ...]
+	Vector []byte // Vector is json of {word: rate, ...} freq
 	Dup    []byte // Dup is json of Duplication struct
 }
 
 // Duplication is the struct representation of Question.Dup
 type Duplication struct {
 	ID   string        `json:"id"`   // ID is hex string for json's 53 bits number
-	Rate float64       `json:"rate"` // Rate is the 重复率 or 总重复率
+	Rate float64       `json:"rate"` // Rate is the avg(non-leaf) or max(leaf) similarity
 	To   []Duplication `json:"to,omitempty"`
 }
