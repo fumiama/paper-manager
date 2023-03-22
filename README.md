@@ -148,6 +148,11 @@
 ![account demo 7](https://user-images.githubusercontent.com/41315874/226826829-6dec3a7a-8386-4d33-aa6e-cea26cc846e9.png)
 ### 8. A老师(filemgr)成功登录进入工作台
 ![account demo 8](https://user-images.githubusercontent.com/41315874/226826932-2c365095-a35e-477f-ace7-a98452c24db4.png)
+### 9. 课程组长将A老师(filemgr)的权限更改为归档代理
+![account demo 9.1](https://user-images.githubusercontent.com/41315874/226829571-b390de2c-00ec-4e8d-a045-4a6edf3ae3b9.png)
+![account demo 9.2](https://user-images.githubusercontent.com/41315874/226829577-1ff58c51-c816-4681-b758-c41bf4bf679f.png)
+### 10. A老师(filemgr)工作台的显示
+![account demo 10](https://user-images.githubusercontent.com/41315874/226829706-40c0f1d0-73d7-4752-948b-79cd709a6949.png)
 
 ## 试卷库 /filelist
 
