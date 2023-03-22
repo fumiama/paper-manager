@@ -12,12 +12,12 @@ const menu: MenuModule = {
         name: t('routes.dashboard.analysis'),
       },
       {
-        path: 'account',
-        name: t('routes.dashboard.account'),
-      },
-      {
         path: 'workbench',
         name: t('routes.dashboard.workbench'),
+      },
+      {
+        path: 'account',
+        name: t('routes.dashboard.account'),
       },
     ],
   },

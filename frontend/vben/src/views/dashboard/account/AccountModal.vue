@@ -16,6 +16,20 @@
     emits: ['success', 'register'],
     setup(_, { emit }) {
       const rowId = ref('')
+      const roles = [
+        {
+          roleName: '课程组长',
+          value: 'super',
+        },
+        {
+          roleName: '归档代理',
+          value: 'filemgr',
+        },
+        {
+          roleName: '课程组员',
+          value: 'user',
+        },
+      ]
 
       const [registerForm, { setFieldsValue, resetFields, validate }] = useForm({
         labelWidth: 100,
@@ -27,20 +41,7 @@
             component: 'ApiSelect',
             componentProps: {
               api: () => {
-                return [
-                  {
-                    roleName: '课程组长',
-                    value: 'super',
-                  },
-                  {
-                    roleName: '归档代理',
-                    value: 'filemgr',
-                  },
-                  {
-                    roleName: '课程组员',
-                    value: 'user',
-                  },
-                ]
+                return roles
               },
               labelField: 'roleName',
               valueField: 'value',
@@ -75,17 +76,19 @@
         })
       })
 
+      const nick2id = { 课程组长: 1, super: 1, 归档代理: 2, filemgr: 2, 课程组员: 3, user: 3 }
+
       async function handleSubmit() {
         try {
           const values = await validate()
           setModalProps({ confirmLoading: true })
           closeModal()
           await setOthersInfoApi({ id: Number(rowId.value), nick: values.nick, desc: values.desc })
-          if (useUserStore().getUserInfo.userId != Number(rowId.value))
-            await setRole(
-              Number(rowId.value),
-              { 课程组长: 1, 归档代理: 2, 课程组员: 3 }[values.role],
-            )
+          if (useUserStore().getUserInfo.userId != Number(rowId.value)) {
+            const rid = nick2id[values.role]
+            await setRole(Number(rowId.value), rid)
+            values.role = roles[rid - 1].roleName
+          }
           emit('success', { values: { ...values, id: rowId.value } })
         } finally {
           setModalProps({ confirmLoading: false })
