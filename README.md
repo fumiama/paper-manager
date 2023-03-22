@@ -50,12 +50,37 @@
 > 注销时将访问`/api/logout`
 
 ### 仪表板/分析页 /dashboard/analysis
-向课程组长显示近一年的访问量信息。
+向课程组长展示近一年的访问量信息。
 > 将访问`/api/getAnnualVisits`
 
 ![analysis](https://user-images.githubusercontent.com/41315874/226802920-f6b43a7b-6191-4dcb-9f48-364c161c1cfd.png)
 
 ### 仪表板/工作台 /dashboard/workbench
+显示用户收到的消息，用户可以选择`删除`已读消息。对于课程组长，还提供对`注册`和`重置密码`消息的快捷处理按钮`接受`，可以快速执行相应操作。
+#### 1. 课程组长工作台
+> 登入系统，修改了自己的信息，又收到了两个用户的注册请求
+
+![workbench demo 1](https://user-images.githubusercontent.com/41315874/226805939-8d007980-c5da-4047-9c0b-ccf7c14ffe8e.png)
+
+#### 2. 课程组长工作台
+> 接受2人注册请求
+
+![workbench demo 2](https://user-images.githubusercontent.com/41315874/226806044-fe721597-f1d5-4c01-854a-2b945fbbeb47.png)
+
+#### 3. A老师(filemgr)工作台
+> 课程组长接受注册申请后，更改了个人信息
+
+![workbench demo 3](https://user-images.githubusercontent.com/41315874/226806112-344bafc1-70f1-4408-bcd0-2cd6896c7269.png)
+
+#### 4. B老师(user)工作台
+> 课程组长接受注册申请后，更改了个人信息和联系方式
+
+![workbench demo 4](https://user-images.githubusercontent.com/41315874/226806143-ce5a833a-f30d-4f51-945e-bf4b83459758.png)
+
+#### 5. 课程组长工作台
+> 最终的消息状态
+
+![workbench demo 5](https://user-images.githubusercontent.com/41315874/226806212-8ad2406c-2172-4a58-a0c9-7d65081dd3e8.png)
 
 ### 个人设置 /settings
 
