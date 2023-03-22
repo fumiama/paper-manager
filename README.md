@@ -116,8 +116,7 @@
 #### 5. 课程组长工作台
 > 最终的消息状态
 
-![workbench demo 5](https://user-images.githubusercontent.com/41315874/226806212-8ad2406c-2172-4a58-a0c9-7d65081dd3e8.png)
-
+![workbench demo 5](https://user-images.githubusercontent.com/41315874/226811656-a6e4238f-2dbe-4a49-a50f-3d2075838cb8.png)
 
 ### 试卷库 /filelist
 
