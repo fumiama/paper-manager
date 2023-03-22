@@ -23,12 +23,24 @@
 - **课程组长**：导航到分析页`/dashboard/analysis`
 - **其他人**：导航到工作台`/dashboard/workbench`
 > 登录时将依次访问`/api/getLoginSalt` `/api/login` `/api/getUserInfo`
+
+![login screen](https://user-images.githubusercontent.com/41315874/226117983-c1e69916-def0-4746-939a-5041412b755f.png)
+
 #### 忘记密码
 点击`忘记密码`后填写用户名与手机号码，再点击`重置`，即可将重置消息报告给课程组长，由课程组长电话联系确认无误后，在系统中批准进行密码重置。
 #### 注册
 点击`注册`后填写用户名、手机号与密码，再点击`注册`，即可将注册消息报告给课程组长，由课程组长电话联系确认无误后，在系统中批准以所填信息创建账号。
 
-![login screen](https://user-images.githubusercontent.com/41315874/226117983-c1e69916-def0-4746-939a-5041412b755f.png)
+<table>
+	<tr>
+		<td align="center"><img src="https://user-images.githubusercontent.com/41315874/226804117-40cfe055-d4ca-440f-9129-1599a126f520.png"></td>
+		<td align="center"><img src="https://user-images.githubusercontent.com/41315874/226804339-936e38df-e8ea-4d85-a29f-75f191538fee.png"></td>
+	</tr>
+    <tr>
+		<td align="center">填写信息</td>
+		<td align="center">上报消息</td>
+	</tr>
+</table>
 
 ### 注销
 
