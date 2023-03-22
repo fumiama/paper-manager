@@ -52,9 +52,9 @@ func (pt PaperType) MiddleFinal() string {
 func (pt PaperType) SetMiddleFinal(x string) PaperType {
 	n := PaperType(0)
 	switch x {
-	case "期中":
+	case "中":
 		n = 1 << 4
-	case "期末":
+	case "末":
 		n = 2 << 4
 	}
 	return pt | n
@@ -72,12 +72,12 @@ func (pt PaperType) FirstSecond() string {
 	}
 }
 
-func (pt PaperType) SetFirstSecond(x string) PaperType {
+func (pt PaperType) SetFirstSecond(x byte) PaperType {
 	n := PaperType(0)
 	switch x {
-	case "第1学期":
+	case '1':
 		n = 1 << 8
-	case "第2学期":
+	case '2':
 		n = 2 << 8
 	}
 	return pt | n
@@ -151,14 +151,15 @@ type File struct {
 	Year      StudyYear
 	Type      PaperType
 	Date      uint32        // Date is the yyyymmdd of 考试日期
+	UID       int           // UID is the uploader's ID
+	UpTime    int64         // UpTime is time.Now().Unix() when uploading
+	Size      int64         // Size of the original file
 	Time      time.Duration // Time is 考试时长
 	Class     string        // Class is 考试科目
 	Rate      string        // Rate is 成绩构成比例
 	Path      string        // Path is like paper/Class/2023/第一学期/期末/A/xxx.docx
 	Questions []byte        // Questions is for json struct QuestionJSON
 }
-
-func (f *FileDatabase) AddFile() {}
 
 // QuestionJSON is the struct representation of File.Questions
 type QuestionJSON struct {
