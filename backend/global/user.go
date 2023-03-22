@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fumiama/paper-manager/backend/utils"
@@ -23,6 +24,7 @@ var (
 	ErrEmptyName         = errors.New("empty name")
 	ErrInvalidUsersCount = errors.New("invalid users count")
 	ErrInvalidUserID     = errors.New("invalid user ID")
+	ErrInvalidAvatar     = errors.New("invalid avatar")
 	ErrEmptyUserID       = errors.New("empty user ID")
 	ErrEmptyContact      = errors.New("empty contact")
 	ErrUsernameExists    = errors.New("username exists")
@@ -147,6 +149,9 @@ func (u *UserDatabase) UpdateUserInfo(id int, opname, nick, avtr, desc string) e
 		user.Nick = nick
 	}
 	if avtr != "" {
+		if strings.Contains(avtr, "..") {
+			return ErrInvalidAvatar
+		}
 		user.Avtr = avtr
 	}
 	if desc != "" {

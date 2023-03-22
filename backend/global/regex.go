@@ -9,7 +9,7 @@ import (
 // Regex stores user's config of splitting docx file
 type Regex struct {
 	ID     int    // ID is User(ID)
-	Title  string // Title default `.*(\d{4})\s*-.*学年.*(\d).*([中末]).*([AB])\s*卷`
+	Title  string // Title default `.*(\d{4})\s*-.*学年.*(\d?).*([中末]?).*([AB]?)\s*卷`
 	Class  string // Class default `考试科目：\s*(\S+)\s*`
 	OpenCl string // OpenCl default `考试形式：\s*(\S+)\s*`
 	Date   string // Date default `考试日期：\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日`
@@ -20,7 +20,7 @@ type Regex struct {
 }
 
 func newRegex() (reg Regex) {
-	reg.Title = `.*(\d{4})\s*-.*学年.*(\d).*([中末]).*([AB])\s*卷`
+	reg.Title = `.*(\d{4})\s*-.*学年.*(\d?).*([中末]?).*([AB]?)\s*卷`
 	reg.Class = `考试科目：\s*(\S+)\s*`
 	reg.OpenCl = `考试形式：\s*(\S+)\s*`
 	reg.Date = `考试日期：\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日`

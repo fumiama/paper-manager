@@ -7,6 +7,7 @@ require (
 	github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b
 	github.com/RomiChan/syncx v0.0.0-20221202055724-5f842c53020e
 	github.com/fumiama/go-base16384 v1.6.4
+	github.com/fumiama/go-docx v0.0.0-20230310052825-daf7190ea69b
 	github.com/fumiama/imgsz v0.0.2
 	github.com/sirupsen/logrus v1.9.0
 )

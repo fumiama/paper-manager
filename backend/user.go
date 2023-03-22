@@ -179,7 +179,7 @@ func setUserInfo(id int, nick, desc, avtr *string) error {
 	}
 	if a == "" {
 		*avtr = user.Avtr
-	} else if utils.IsNotExist(global.DataFolder + a) {
+	} else if strings.Contains(a, "..") || utils.IsNotExist(global.DataFolder+a) {
 		return os.ErrNotExist
 	}
 	if a == user.Avtr {

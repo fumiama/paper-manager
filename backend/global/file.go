@@ -1,14 +1,26 @@
 package global
 
 import (
+	"crypto/md5"
+	"encoding/binary"
+	"errors"
+	"io"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/fumiama/go-docx"
 )
 
 const (
 	FileTableFile     = "file"
 	FileTableQuestion = "question"
+)
+
+var (
+	ErrMajorSplitsTooShort = errors.New("major splits too short")
 )
 
 // PaperType [4 开 一页纸 闭] [4 上下] [4 中末] [4 AB]
@@ -159,6 +171,144 @@ type File struct {
 	Rate      string        // Rate is 成绩构成比例
 	Path      string        // Path is like paper/Class/2023/第一学期/期末/A/xxx.docx
 	Questions []byte        // Questions is for json struct QuestionJSON
+}
+
+// AddFile from FileFolder+tempath and copy it to File.Path.
+// The para res must belong to a valid user
+func (f *FileDatabase) AddFile(tempath string, reg *Regex) (*File, error) {
+	user, err := UserDB.GetUserByID(reg.ID)
+	if err != nil {
+		return nil, err
+	}
+	if !user.IsFileManager() {
+		return nil, ErrInvalidRole
+	}
+	if strings.Contains(tempath, "..") {
+		return nil, os.ErrNotExist
+	}
+	tempath = FileFolder + tempath
+	docf, err := os.Open(tempath)
+	if err != nil {
+		return nil, err
+	}
+	defer docf.Close()
+	h := md5.New()
+	_, err = io.Copy(h, docf)
+	if err != nil {
+		return nil, err
+	}
+	var buf [md5.Size]byte
+	id := binary.LittleEndian.Uint64(h.Sum(buf[:0]))
+	_, err = docf.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, err
+	}
+	stat, err := docf.Stat()
+	if err != nil {
+		return nil, err
+	}
+	sz := stat.Size()
+	doc, err := docx.Parse(docf, sz)
+	if err != nil {
+		return nil, err
+	}
+	majorre, err := regexp.Compile(reg.Major)
+	if err != nil {
+		return nil, err
+	}
+	docs := doc.SplitByParagraph(docx.SplitDocxByPlainTextRegex(majorre))
+	if len(docs) < 2 {
+		return nil, ErrMajorSplitsTooShort
+	}
+	file := &File{
+		ID:     id,
+		UID:    *user.ID,
+		UpTime: time.Now().Unix(),
+		Size:   sz,
+	}
+	titlere, err := regexp.Compile(reg.Title)
+	if err != nil {
+		return nil, err
+	}
+	classre, err := regexp.Compile(reg.Class)
+	if err != nil {
+		return nil, err
+	}
+	opclre, err := regexp.Compile(reg.OpenCl)
+	if err != nil {
+		return nil, err
+	}
+	datere, err := regexp.Compile(reg.Date)
+	if err != nil {
+		return nil, err
+	}
+	timere, err := regexp.Compile(reg.Time)
+	if err != nil {
+		return nil, err
+	}
+	ratere, err := regexp.Compile(reg.Rate)
+	if err != nil {
+		return nil, err
+	}
+	for _, it := range docs[0].Document.Body.Items {
+		if p, ok := it.(*docx.Paragraph); ok {
+			text := p.String()
+			title := titlere.FindStringSubmatch(text)
+			if len(title) >= 5 {
+				years, semesters, mfs, abs := title[1], title[2], title[3], title[4]
+				y, err := strconv.Atoi(years)
+				if err != nil {
+					return nil, err
+				}
+				file.Year = StudyYear(y)
+				if len(semesters) > 0 {
+					file.Type = file.Type.SetFirstSecond(semesters[0])
+				}
+				file.Type = file.Type.SetMiddleFinal(mfs)
+				if len(abs) > 0 {
+					file.Type = file.Type.SetAB(abs[0])
+				}
+			}
+			class := classre.FindStringSubmatch(text)
+			if len(class) >= 2 {
+				file.Class = class[1]
+			}
+			opcl := opclre.FindStringSubmatch(text)
+			if len(opcl) >= 2 {
+				file.Type = file.Type.SetOpenClose(opcl[1])
+			}
+			date := datere.FindStringSubmatch(text)
+			if len(date) >= 4 {
+				y, m, d := date[1], date[2], date[3]
+				if y != "" && m != "" && d != "" {
+					yyyy, err := strconv.ParseUint(y, 10, 64)
+					if err == nil && yyyy > 1600 {
+						mm, err := strconv.ParseUint(m, 10, 64)
+						if err == nil && mm >= 1 && mm <= 12 {
+							dd, err := strconv.ParseUint(d, 10, 64)
+							if err == nil && dd >= 1 && dd <= 31 {
+								file.Date = uint32(yyyy*10000 + mm*100 + dd)
+							}
+						}
+					}
+				}
+			}
+			times := timere.FindStringSubmatch(text)
+			if len(times) >= 2 {
+				min, err := strconv.Atoi(times[1])
+				if err == nil && min > 0 {
+					file.Time = time.Minute * time.Duration(min)
+				}
+			}
+			rate := ratere.FindStringSubmatch(text)
+			if len(rate) >= 2 {
+				file.Rate = rate[1]
+			}
+		}
+	}
+	docs = docs[1:]
+
+	return file, nil
 }
 
 // QuestionJSON is the struct representation of File.Questions
