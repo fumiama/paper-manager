@@ -2,6 +2,7 @@ package global
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"time"
 
@@ -113,6 +114,18 @@ func init() {
 			Desc: "天何所沓，十二焉分。日月安属，列星安陈。",
 		}, "系统")
 		logrus.Warn("[user] 初次启动, 创建初始账户 fumiama 密码 123456")
+	}
+	err = UserDB.db.Close()
+	if err != nil {
+		panic(err)
+	}
+	err = os.Chmod(UserDB.db.DBPath, 0600)
+	if err != nil {
+		panic(err)
+	}
+	err = UserDB.db.Open(time.Hour)
+	if err != nil {
+		panic(err)
 	}
 }
 
