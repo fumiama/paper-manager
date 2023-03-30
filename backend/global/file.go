@@ -1,9 +1,14 @@
 package global
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"image"
 	"io"
 	"os"
 	"regexp"
@@ -11,6 +16,13 @@ import (
 	"strings"
 	"time"
 
+	_ "image/jpeg"
+	_ "image/png"
+
+	_ "golang.org/x/image/webp"
+
+	"github.com/corona10/goimagehash"
+	base14 "github.com/fumiama/go-base16384"
 	"github.com/fumiama/go-docx"
 )
 
@@ -175,12 +187,12 @@ type File struct {
 
 // AddFile from FileFolder+tempath and copy it to File.Path.
 // The para res must belong to a valid user
-func (f *FileDatabase) AddFile(tempath string, reg *Regex) (*File, error) {
+func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress func(uint)) (*File, error) {
 	user, err := UserDB.GetUserByID(reg.ID)
 	if err != nil {
 		return nil, err
 	}
-	if !user.IsFileManager() {
+	if !user.IsFileManager() && !istemp {
 		return nil, ErrInvalidRole
 	}
 	if strings.Contains(tempath, "..") {
@@ -212,6 +224,7 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
+	doc.Document.Body.DropDrawingOf("NilPicture")
 	majorre, err := regexp.Compile(reg.Major)
 	if err != nil {
 		return nil, err
@@ -220,6 +233,7 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex) (*File, error) {
 	if len(docs) < 2 {
 		return nil, ErrMajorSplitsTooShort
 	}
+	// filling File struct
 	file := &File{
 		ID:     id,
 		UID:    *user.ID,
@@ -307,7 +321,85 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex) (*File, error) {
 		}
 	}
 	docs = docs[1:]
+	// parse questions
+	subre, err := regexp.Compile(reg.Sub)
+	if err != nil {
+		return nil, err
+	}
+	for _, majordoc := range docs {
+		majorq := QuestionJSON{}
+		for _, it := range majordoc.Document.Body.Items {
+			if p, ok := it.(*docx.Paragraph); ok {
+				text := p.String()
+				majorinfo := majorre.FindStringSubmatch(text)
+				if len(majorinfo) >= 6 {
+					name, points := majorinfo[2], majorinfo[5]
+					majorq.Name = name
+					majorq.Points, _ = strconv.Atoi(points)
+				}
+			}
+		}
+		subdocs := majordoc.SplitByParagraph(docx.SplitDocxByPlainTextRegex(subre))
+		majorq.Sub = make([]QuestionJSON, 0, len(subdocs))
+		for _, subdoc := range subdocs {
+			sb := bytes.NewBuffer(make([]byte, 0, 4096))
+			for _, it := range subdoc.Document.Body.Items {
+				sb.WriteString(fmt.Sprint(it))
+			}
+			m := md5.Sum(sb.Bytes())
+			que := &Question{
+				ID:    binary.LittleEndian.Uint64(m[:8]),
+				Plain: base14.BytesToString(sb.Bytes()),
+				Images: func() []byte {
+					m := make(map[string]string)
+					_ = subdoc.RangeRelationships(func(r *docx.Relationship) error {
+						if r.Type != docx.REL_IMAGE {
+							return nil
+						}
+						if r.Target == "" {
+							return nil
+						}
+						i := strings.LastIndex(r.Target, "/")
+						if i < 0 {
+							return nil
+						}
+						name := r.Target[i+1:]
+						if name == "" {
+							return nil
+						}
+						md := subdoc.Media(name)
+						if md == nil {
+							return nil
+						}
+						img, _, err := image.Decode(bytes.NewReader(md.Data))
+						if err != nil {
+							return nil
+						}
+						dh, err := goimagehash.DifferenceHash(img)
+						if err != nil {
+							return nil
+						}
+						var buf [8]byte
+						binary.LittleEndian.PutUint64(buf[:], dh.GetHash())
+						m[name] = hex.EncodeToString(buf[:])
+						return nil
+					})
+					if len(m) == 0 {
+						return nil
+					}
+					data, err := json.Marshal(m)
+					if err != nil {
+						return nil
+					}
+					return data
+				}(),
+				Vector: func() []byte {
+					plain := base14.BytesToString(sb.Bytes())
 
+				}(),
+			}
+		}
+	}
 	return file, nil
 }
 
@@ -322,8 +414,7 @@ type QuestionJSON struct {
 type Question struct {
 	ID     uint64 // ID is the first 8 bytes of the Plain's md5
 	Plain  string // Plain is the plain text of the question (like markdown format)
-	XML    []byte // XML is the OpenXML bytes of the question
-	Images []byte // Images is json of the image paths in XML, ex. ['md5.jpg', 'md5.png', ...]
+	Images []byte // Images is json of the image dhash in XML, ex. ['rId1': '1234567890abcdef', ...]
 	Vector []byte // Vector is json of {word: rate, ...} freq
 	Dup    []byte // Dup is json of Duplication struct
 }

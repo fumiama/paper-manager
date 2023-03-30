@@ -6,18 +6,22 @@ require (
 	github.com/FloatTech/sqlite v1.6.0
 	github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b
 	github.com/RomiChan/syncx v0.0.0-20221202055724-5f842c53020e
+	github.com/corona10/goimagehash v1.1.0
 	github.com/fumiama/go-base16384 v1.6.4
-	github.com/fumiama/go-docx v0.0.0-20230310052825-daf7190ea69b
+	github.com/fumiama/go-docx v0.0.0-20230330141738-34f53a967c03
 	github.com/fumiama/imgsz v0.0.2
+	github.com/fumiama/jieba v0.0.0-20221203025406-36c17a10b565
 	github.com/sirupsen/logrus v1.9.0
+	golang.org/x/image v0.6.0
 )
 
 require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	modernc.org/libc v1.21.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.4.0 // indirect
