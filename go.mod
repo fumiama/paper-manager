@@ -3,7 +3,7 @@ module github.com/fumiama/paper-manager
 go 1.20
 
 require (
-	github.com/FloatTech/sqlite v1.6.0
+	github.com/FloatTech/sqlite v1.6.1
 	github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b
 	github.com/RomiChan/syncx v0.0.0-20221202055724-5f842c53020e
 	github.com/corona10/goimagehash v1.1.0

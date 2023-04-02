@@ -29,12 +29,15 @@ import (
 )
 
 const (
-	FileTableFile     = "file"
-	FileTableQuestion = "question"
+	FileTableFile         = "file"
+	FileTableTempFile     = "tmpfile"
+	FileTableQuestion     = "question"
+	FileTableTempQuestion = "tmpqstn"
 )
 
 var (
 	ErrMajorSplitsTooShort = errors.New("major splits too short")
+	ErrEmptyClass          = errors.New("empty class")
 )
 
 // PaperType [4 开 一页纸 闭] [4 上下] [4 中末] [4 AB]
@@ -154,7 +157,15 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = FileDB.db.Create(FileTableTempFile, &File{})
+	if err != nil {
+		panic(err)
+	}
 	err = FileDB.db.Create(FileTableQuestion, &Question{})
+	if err != nil {
+		panic(err)
+	}
+	err = FileDB.db.Create(FileTableTempQuestion, &Question{})
 	if err != nil {
 		panic(err)
 	}
@@ -183,8 +194,8 @@ type File struct {
 	Time      time.Duration // Time is 考试时长
 	Class     string        // Class is 考试科目
 	Rate      string        // Rate is 成绩构成比例
-	Path      string        // Path is like paper/Class/2023/第一学期/期末/A/xxx.docx
-	Questions []byte        // Questions is for json struct QuestionJSON
+	Path      string        // Path is like paper/Class/2022-2023学年/第一学期/期末/A/xxx.docx
+	Questions []byte        // Questions is for []QuestionJSON
 }
 
 // AddFile from FileFolder+tempath and copy it to File.Path.
@@ -322,12 +333,29 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress
 			}
 		}
 	}
+	if file.Class == "" || strings.Contains(file.Class, "..") {
+		return nil, ErrEmptyClass
+	}
+	filebasepath := ""
+	if istemp {
+		filebasepath = PaperFolder + "temp/" + strconv.Itoa(*user.ID) + "/"
+	} else {
+		filebasepath = fmt.Sprintf(
+			PaperFolder+file.Class+"/%v/%v/%v/%v/",
+			file.Year, file.Type.FirstSecond(), file.Type.MiddleFinal(), file.Type.AB(),
+		)
+	}
+	err = os.MkdirAll(filebasepath, 0755)
+	if err != nil {
+		return nil, err
+	}
 	docs = docs[1:]
 	// parse questions
 	subre, err := regexp.Compile(reg.Sub)
 	if err != nil {
 		return nil, err
 	}
+	filequestions := make([]QuestionJSON, 0, len(docs))
 	for _, majordoc := range docs {
 		majorq := QuestionJSON{}
 		for _, it := range majordoc.Document.Body.Items {
@@ -419,6 +447,9 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress
 				if err != nil {
 					return err
 				}
+				if r < 0.1 {
+					return nil
+				}
 				var buf [8]byte
 				binary.LittleEndian.PutUint64(buf[:], q.ID)
 				dupmap[hex.EncodeToString(buf[:])] = r
@@ -426,11 +457,69 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress
 			})
 			FileDB.mu.RUnlock()
 			if err == nil {
-
+				que.Dup, _ = json.Marshal(dupmap)
 			}
+			w := bytes.NewBuffer(make([]byte, 0, 65536))
+			_, err = subdoc.WriteTo(w)
+			var buf [8]byte
+			binary.LittleEndian.PutUint64(buf[:], que.ID)
+			queidstr := hex.EncodeToString(buf[:])
+			if err == nil {
+				m5 := md5.Sum(w.Bytes())
+				quepath := filebasepath + hex.EncodeToString(m5[:]) + ".docx"
+				f, err := os.Create(quepath)
+				if err == nil {
+					_, _ = io.Copy(f, w)
+					_ = f.Close()
+				}
+				que.Path = quepath
+				if istemp {
+					FileDB.mu.Lock()
+					_ = FileDB.db.Insert(FileTableTempQuestion, que)
+					FileDB.mu.Unlock()
+				} else {
+					FileDB.mu.Lock()
+					for k, v := range dupmap {
+						err = FileDB.db.Find(FileTableQuestion, &q, "WHERE ID=0x"+k)
+						if err == nil {
+							thismap := make(map[string]float64, 64)
+							err := json.Unmarshal(q.Dup, &thismap)
+							if err == nil {
+								thismap[queidstr] = v
+								q.Dup, err = json.Marshal(thismap)
+								if err == nil {
+									_ = FileDB.db.Insert(FileTableQuestion, &q)
+								}
+							}
+						}
+					}
+					_ = FileDB.db.Insert(FileTableQuestion, que)
+					FileDB.mu.Unlock()
+				}
+			}
+			r := 0.0
+			for _, v := range dupmap {
+				if v > r {
+					r = v
+				}
+			}
+			majorq.Sub = append(majorq.Sub, QuestionJSON{
+				Name:   queidstr,
+				Points: 0, //TODO: fill sub points
+				Rate:   r,
+			})
 		}
+		filequestions = append(filequestions, majorq)
 	}
-	return file, nil
+	file.Questions, _ = json.Marshal(filequestions)
+	FileDB.mu.Lock()
+	if istemp {
+		err = FileDB.db.Insert(FileTableTempFile, file)
+	} else {
+		err = FileDB.db.Insert(FileTableFile, file)
+	}
+	FileDB.mu.Unlock()
+	return file, err
 }
 
 // QuestionJSON is the struct representation of File.Questions
@@ -443,6 +532,7 @@ type QuestionJSON struct {
 
 type Question struct {
 	ID     uint64 // ID is the first 8 bytes of the Plain's md5
+	Path   string // Path is the question's docx position
 	Plain  string // Plain is the plain text of the question (like markdown format)
 	Images []byte // Images is json of the image dhash in XML, ex. ['rId1': '1234567890abcdef', ...]
 	Vector []byte // Vector is json of {word: freq, ...}
