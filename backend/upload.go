@@ -96,5 +96,34 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		writeresult(w, codeError, nil, err.Error(), typeError)
 		return
 	}
-
+	ff, h, err = r.FormFile("paper")
+	if err == nil {
+		defer ff.Close()
+		if !user.IsFileManager() {
+			writeresult(w, codeError, nil, "no upload permission", typeError)
+			return
+		}
+		ct := h.Header.Get("Content-Type")
+		fn := h.Filename
+		logrus.Infoln("[file.UploadHandler] receive paper, name:", fn)
+		if ct != "application/vnd.openxmlformats-officedocument.wordprocessingml.document" {
+			writeresult(w, codeError, nil, "invalid mimetype: need docx", typeError)
+			return
+		}
+		if strings.ContainsAny(fn, `/\`) || strings.Contains(fn, "..") {
+			writeresult(w, codeError, nil, "invalid filename", typeError)
+			return
+		}
+		err = global.FileDB.SaveFileToTemp(*user.ID, ff, fn)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, "上传"+fn+"成功", messageOk, typeSuccess)
+		return
+	}
+	if err != http.ErrMissingFile {
+		writeresult(w, codeError, nil, err.Error(), typeError)
+		return
+	}
 }

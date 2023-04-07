@@ -2,6 +2,7 @@
   <PageWrapper :class="prefixCls" :title="t('routes.filelist.name')">
     <template #headerContent>
       <BasicUpload
+        name="paper"
         v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
         :maxSize="20"
         :maxNumber="10"

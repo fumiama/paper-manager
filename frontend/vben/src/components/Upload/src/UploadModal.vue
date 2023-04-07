@@ -61,6 +61,7 @@
   import { warn } from '/@/utils/log'
   import FileList from './FileList.vue'
   import { useI18n } from '/@/hooks/web/useI18n'
+  import { ResultEnum } from '/@/enums/httpEnum'
   export default defineComponent({
     components: { BasicModal, Upload, Alert, FileList },
     props: {
@@ -181,10 +182,17 @@
           )
           item.status = UploadResultStatus.SUCCESS
           item.responseData = data
-          return {
-            success: true,
-            error: null,
-          }
+          const { code, result } = data
+          if (code == ResultEnum.SUCCESS)
+            return {
+              success: true,
+              error: null,
+            }
+          else
+            return {
+              success: false,
+              error: result,
+            }
         } catch (e) {
           console.log(e)
           item.status = UploadResultStatus.ERROR

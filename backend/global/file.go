@@ -21,6 +21,7 @@ import (
 
 	_ "golang.org/x/image/webp"
 
+	sql "github.com/FloatTech/sqlite"
 	"github.com/corona10/goimagehash"
 	base14 "github.com/fumiama/go-base16384"
 	"github.com/fumiama/go-docx"
@@ -29,6 +30,7 @@ import (
 )
 
 const (
+	FileTableList         = "lst"
 	FileTableFile         = "file"
 	FileTableTempFile     = "tmpfile"
 	FileTableQuestion     = "question"
@@ -40,120 +42,18 @@ var (
 	ErrEmptyClass          = errors.New("empty class")
 )
 
-// PaperType [4 开 一页纸 闭] [4 上下] [4 中末] [4 AB]
-type PaperType uint16
-
-// AB default A
-func (pt PaperType) AB() byte {
-	switch pt & 0x0f {
-	case 1:
-		return 'A'
-	case 2:
-		return 'B'
-	default:
-		return 'A'
-	}
-}
-
-func (pt PaperType) SetAB(x byte) PaperType {
-	n := PaperType(0)
-	switch x {
-	case 'A':
-		n = 1
-	case 'B':
-		n = 2
-	}
-	return pt | n
-}
-
-// MiddleFinal default 平时
-func (pt PaperType) MiddleFinal() string {
-	switch (pt & 0xf0) >> 4 {
-	case 1:
-		return "期中"
-	case 2:
-		return "期末"
-	default:
-		return "平时"
-	}
-}
-
-func (pt PaperType) SetMiddleFinal(x string) PaperType {
-	n := PaperType(0)
-	switch x {
-	case "中":
-		n = 1 << 4
-	case "末":
-		n = 2 << 4
-	}
-	return pt | n
-}
-
-// FirstSecond default is 年度
-func (pt PaperType) FirstSecond() string {
-	switch (pt & 0x0f00) >> 8 {
-	case 1:
-		return "第1学期"
-	case 2:
-		return "第2学期"
-	default:
-		return "年度"
-	}
-}
-
-func (pt PaperType) SetFirstSecond(x byte) PaperType {
-	n := PaperType(0)
-	switch x {
-	case '1':
-		n = 1 << 8
-	case '2':
-		n = 2 << 8
-	}
-	return pt | n
-}
-
-// OpenClose default 闭卷
-func (pt PaperType) OpenClose() string {
-	switch (pt & 0xf000) >> 12 {
-	case 1:
-		return "开卷"
-	case 2:
-		return "一页纸开卷"
-	case 3:
-		return "闭卷"
-	default:
-		return "闭卷"
-	}
-}
-
-func (pt PaperType) SetOpenClose(x string) PaperType {
-	n := PaperType(0)
-	switch x {
-	case "开卷":
-		n = 1 << 12
-	case "一页纸开卷":
-		n = 2 << 12
-	case "闭卷":
-		n = 3 << 12
-	}
-	return pt | n
-}
-
-// StudyYear 学年
-type StudyYear uint16
-
-// String ex. 2022-2023学年
-func (sy StudyYear) String() string {
-	next := sy + 1
-	return strconv.Itoa(int(sy)) + "-" + strconv.Itoa(int(next)) + "学年"
-}
-
 func init() {
 	err := FileDB.db.Open(time.Hour)
 	if err != nil {
 		panic(err)
 	}
-	err = FileDB.db.Create(FileTableFile, &File{})
+	err = FileDB.db.Create(FileTableList, &List{})
+	if err != nil {
+		panic(err)
+	}
+	err = FileDB.db.Create(FileTableFile, &File{},
+		"FOREIGN KEY(ListID) REFERENCES "+FileTableList+"(ID)",
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -183,24 +83,31 @@ func init() {
 	}
 }
 
+// File stores to paper/Class/2022-2023学年/第一学期/期末/A/xxx.docx
 type File struct {
 	ID        uint64 // ID is the first 8 bytes of the original file's md5
+	ListID    int    // ListID is the foreign key to List(ID)
 	Year      StudyYear
 	Type      PaperType
 	Date      uint32        // Date is the yyyymmdd of 考试日期
-	UID       int           // UID is the uploader's ID
-	UpTime    int64         // UpTime is time.Now().Unix() when uploading
-	Size      int64         // Size of the original file
 	Time      time.Duration // Time is 考试时长
 	Class     string        // Class is 考试科目
 	Rate      string        // Rate is 成绩构成比例
-	Path      string        // Path is like paper/Class/2022-2023学年/第一学期/期末/A/xxx.docx
 	Questions []byte        // Questions is for []QuestionJSON
 }
 
-// AddFile from FileFolder+tempath and copy it to File.Path.
-// The para res must belong to a valid user
-func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress func(uint)) (*File, error) {
+// StudyYear 学年
+type StudyYear uint16
+
+// String ex. 2022-2023学年
+func (sy StudyYear) String() string {
+	next := sy + 1
+	return strconv.Itoa(int(sy)) + "-" + strconv.Itoa(int(next)) + "学年"
+}
+
+// AddFile from lst and copy it to analyzed path.
+// The para reg must belong to a valid user
+func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func(uint)) (*File, error) {
 	user, err := UserDB.GetUserByID(reg.ID)
 	if err != nil {
 		return nil, err
@@ -208,10 +115,14 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress
 	if !user.IsFileManager() && !istemp {
 		return nil, ErrInvalidRole
 	}
-	if strings.Contains(tempath, "..") {
+	lst, err := sql.Find[List](&FileDB.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
+	if err != nil {
+		return nil, err
+	}
+	if lst.Path == "" || strings.Contains(lst.Path, "..") {
 		return nil, os.ErrNotExist
 	}
-	tempath = FileFolder + tempath
+	tempath := lst.Path
 	docf, err := os.Open(tempath)
 	if err != nil {
 		return nil, err
@@ -249,9 +160,7 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress
 	// filling File struct
 	file := &File{
 		ID:     id,
-		UID:    *user.ID,
-		UpTime: time.Now().Unix(),
-		Size:   sz,
+		ListID: *lst.ID,
 	}
 	titlere, err := regexp.Compile(reg.Title)
 	if err != nil {
@@ -345,6 +254,7 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress
 			file.Year, file.Type.FirstSecond(), file.Type.MiddleFinal(), file.Type.AB(),
 		)
 	}
+	lst.Path = filebasepath
 	err = os.MkdirAll(filebasepath, 0755)
 	if err != nil {
 		return nil, err
@@ -512,12 +422,16 @@ func (f *FileDatabase) AddFile(tempath string, reg *Regex, istemp bool, progress
 		filequestions = append(filequestions, majorq)
 	}
 	file.Questions, _ = json.Marshal(filequestions)
+	lst.Path += file.Class + ".docx"
 	FileDB.mu.Lock()
 	if istemp {
 		err = FileDB.db.Insert(FileTableTempFile, file)
+		lst.IsTemp = true
 	} else {
 		err = FileDB.db.Insert(FileTableFile, file)
+		lst.IsTemp = false
 	}
+	_ = FileDB.db.Insert(FileTableList, &lst)
 	FileDB.mu.Unlock()
 	return file, err
 }
