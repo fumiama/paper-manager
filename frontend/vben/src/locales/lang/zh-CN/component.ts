@@ -91,6 +91,7 @@ export default {
   },
   upload: {
     save: '保存',
+    complete: '完成',
     upload: '上传',
     imgUpload: '图片上传',
     uploaded: '已上传',

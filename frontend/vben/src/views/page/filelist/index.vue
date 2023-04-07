@@ -4,10 +4,10 @@
       <BasicUpload
         name="paper"
         v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
-        :maxSize="20"
-        :maxNumber="10"
-        @change="handleChange"
+        :maxSize="64"
+        :maxNumber="16"
         :api="uploadApi"
+        @change="onChange"
         :accept="['application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
       />
     </template>
@@ -19,7 +19,7 @@
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
           <div>占用空间</div>
-          <p> {{ cardList._totalSize }}MB </p>
+          <p> {{ cardList._totalSize.toFixed(2) }}MB </p>
         </a-col>
         <a-col :span="8" :class="`${prefixCls}__top-col`">
           <div>总题目数</div>
@@ -75,7 +75,7 @@
                   {{ item.description }}
                 </div>
                 <div class="info">
-                  <div><span>文件大小</span>{{ item.size }}MB</div>
+                  <div><span>文件大小</span>{{ item.size.toFixed(2) }}MB</div>
                   <div><span>上传用户</span>{{ item.author }}</div>
                   <div><span>上传时间</span>{{ item.datetime }}</div>
                 </div>
@@ -109,6 +109,7 @@
     pagination,
     refreshFilePercent,
     random,
+    refreshCardList,
   } from './data'
   import { PageWrapper } from '/@/components/Page'
   import { useMessage } from '/@/hooks/web/useMessage'
@@ -119,6 +120,7 @@
   import { useI18n } from '/@/hooks/web/useI18n'
   import { delFile, analyzeFile } from '/@/api/page'
   import { useGo } from '/@/hooks/web/usePage'
+  import { useTabs } from '/@/hooks/web/useTabs'
 
   const { t } = useI18n()
   const { createMessage } = useMessage()
@@ -144,7 +146,7 @@
 
   async function analFile(item: any) {
     try {
-      const msg = await analyzeFile(item.id)
+      const msg = await analyzeFile(item.id, true)
       if (msg) {
         createMessage.success(msg.msg)
         if (!item.hassettimeout && item.percent == 0) {
@@ -171,18 +173,21 @@
     },
     setup() {
       const { hasPermission } = usePermission()
+      const { refreshPage } = useTabs()
       const go = useGo()
 
       function openFile(id: number) {
         go({ name: 'FilePage', params: { id } })
       }
 
+      async function onChange(_: number[]) {
+        refreshCardList()
+        refreshPage()
+      }
+
       return {
         t,
         RoleEnum,
-        handleChange: (list: string[]) => {
-          createMessage.info(`已上传文件${JSON.stringify(list)}`)
-        },
         uploadApi,
         hasPermission,
         prefixCls: 'list-basic',
@@ -192,6 +197,7 @@
         analyzeFile: analFile,
         cardList,
         pagination,
+        onChange,
       }
     },
   })

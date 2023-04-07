@@ -3,9 +3,9 @@ import { resultError, resultSuccess, getRequestToken, requestParams } from '../_
 
 const deletedIDs: number[] = []
 
-const analyzingIDs: { id: number; per: number }[] = []
+// const analyzingIDs: { id: number; per: number }[] = []
 
-function createFileList() {
+/*function createFileList() {
   const lst: any[] = []
   for (let i = 100; i > 0; i--) {
     if (deletedIDs.includes(i)) continue
@@ -21,11 +21,11 @@ function createFileList() {
     })
   }
   return lst
-}
+}*/
 
 export default [
   // mock get filelist
-  {
+  /*{
     url: '/api/getFileList',
     timeout: 200,
     method: 'get',
@@ -40,8 +40,8 @@ export default [
       }
       return resultSuccess(fl)
     },
-  },
-  {
+  },*/
+  /*{
     url: '/api/getFilePercent',
     timeout: 200,
     method: 'get',
@@ -69,7 +69,7 @@ export default [
         percent: 100,
       })
     },
-  },
+  },*/
   {
     url: '/api/delFile',
     timeout: 200,
@@ -85,7 +85,7 @@ export default [
       })
     },
   },
-  {
+  /*{
     url: '/api/analyzeFile',
     timeout: 1000,
     method: 'get',
@@ -99,5 +99,5 @@ export default [
         msg: '正在分析' + id + ', 请耐心等待...',
       })
     },
-  },
+  },*/
 ] as MockMethod[]

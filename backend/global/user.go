@@ -95,8 +95,8 @@ type User struct {
 	Role UserRole
 	Date int64 // Date is the creating date's unix timestamp
 	Pswd string
-	Last int64 // Last is the last password reseting unix timestamp
-	Name string
+	Last int64  // Last is the last password reseting unix timestamp
+	Name string `db:"Name,UNIQUE"`
 	Nick string
 	Avtr string // Avtr is the user's avatar, typically a image url
 	Cont string // Cont is the user's contact, ex. phone number

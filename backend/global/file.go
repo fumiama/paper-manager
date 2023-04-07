@@ -85,8 +85,8 @@ func init() {
 
 // File stores to paper/Class/2022-2023学年/第一学期/期末/A/xxx.docx
 type File struct {
-	ID        uint64 // ID is the first 8 bytes of the original file's md5
-	ListID    int    // ListID is the foreign key to List(ID)
+	ID        int64 // ID is the first 8 bytes of the original file's md5
+	ListID    int   // ListID is the foreign key to List(ID)
 	Year      StudyYear
 	Type      PaperType
 	Date      uint32        // Date is the yyyymmdd of 考试日期
@@ -115,6 +115,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	if !user.IsFileManager() && !istemp {
 		return nil, ErrInvalidRole
 	}
+	progress(1)
 	lst, err := sql.Find[List](&FileDB.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
 	if err != nil {
 		return nil, err
@@ -128,13 +129,14 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		return nil, err
 	}
 	defer docf.Close()
+	progress(2)
 	h := md5.New()
 	_, err = io.Copy(h, docf)
 	if err != nil {
 		return nil, err
 	}
 	var buf [md5.Size]byte
-	id := binary.LittleEndian.Uint64(h.Sum(buf[:0]))
+	id := int64(binary.LittleEndian.Uint64(h.Sum(buf[:0])))
 	_, err = docf.Seek(0, io.SeekStart)
 	if err != nil {
 		return nil, err
@@ -144,10 +146,12 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		return nil, err
 	}
 	sz := stat.Size()
+	progress(3)
 	doc, err := docx.Parse(docf, sz)
 	if err != nil {
 		return nil, err
 	}
+	progress(5)
 	doc.Document.Body.DropDrawingOf("NilPicture")
 	majorre, err := regexp.Compile(reg.Major)
 	if err != nil {
@@ -157,6 +161,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	if len(docs) < 2 {
 		return nil, ErrMajorSplitsTooShort
 	}
+	progress(9)
 	// filling File struct
 	file := &File{
 		ID:     id,
@@ -186,6 +191,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	if err != nil {
 		return nil, err
 	}
+	progress(10)
 	for _, it := range docs[0].Document.Body.Items {
 		if p, ok := it.(*docx.Paragraph); ok {
 			text := p.String()
@@ -206,8 +212,8 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 				}
 			}
 			class := classre.FindStringSubmatch(text)
-			if len(class) >= 2 {
-				file.Class = class[1]
+			if len(class) >= 3 {
+				file.Class = class[2]
 			}
 			opcl := opclre.FindStringSubmatch(text)
 			if len(opcl) >= 2 {
@@ -216,7 +222,10 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			date := datere.FindStringSubmatch(text)
 			if len(date) >= 4 {
 				y, m, d := date[1], date[2], date[3]
-				if y != "" && m != "" && d != "" {
+				if y != "" && m != "" {
+					if d == "" {
+						d = "1"
+					}
 					yyyy, err := strconv.ParseUint(y, 10, 64)
 					if err == nil && yyyy > 1600 {
 						mm, err := strconv.ParseUint(m, 10, 64)
@@ -237,11 +246,12 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 				}
 			}
 			rate := ratere.FindStringSubmatch(text)
-			if len(rate) >= 2 {
-				file.Rate = rate[1]
+			if len(rate) >= 3 {
+				file.Rate = rate[2]
 			}
 		}
 	}
+	progress(19)
 	if file.Class == "" || strings.Contains(file.Class, "..") {
 		return nil, ErrEmptyClass
 	}
@@ -250,12 +260,12 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		filebasepath = PaperFolder + "temp/" + strconv.Itoa(*user.ID) + "/"
 	} else {
 		filebasepath = fmt.Sprintf(
-			PaperFolder+file.Class+"/%v/%v/%v/%v/",
+			PaperFolder+file.Class+"/%v/%v/%v/%c/",
 			file.Year, file.Type.FirstSecond(), file.Type.MiddleFinal(), file.Type.AB(),
 		)
 	}
-	lst.Path = filebasepath
-	err = os.MkdirAll(filebasepath, 0755)
+	questionpath := filebasepath + "questions/"
+	err = os.MkdirAll(questionpath, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +276,19 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		return nil, err
 	}
 	filequestions := make([]QuestionJSON, 0, len(docs))
+	lst.QuesC = 0
+	progress(20)
+	p := uint(20)
+	delta := uint(70 / len(docs))
+	if delta == 0 {
+		delta = 1
+	}
 	for _, majordoc := range docs {
+		p += delta
+		if p > 90 {
+			p = 90
+		}
+		progress(p)
 		majorq := QuestionJSON{}
 		for _, it := range majordoc.Document.Body.Items {
 			if p, ok := it.(*docx.Paragraph); ok {
@@ -280,6 +302,10 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			}
 		}
 		subdocs := majordoc.SplitByParagraph(docx.SplitDocxByPlainTextRegex(subre))
+		if len(subdocs) < 2 {
+			continue
+		}
+		subdocs = subdocs[1:]
 		majorq.Sub = make([]QuestionJSON, 0, len(subdocs))
 		for _, subdoc := range subdocs {
 			sb := bytes.NewBuffer(make([]byte, 0, 4096))
@@ -288,7 +314,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			}
 			m := md5.Sum(sb.Bytes())
 			que := &Question{
-				ID:    binary.LittleEndian.Uint64(m[:8]),
+				ID:    int64(binary.LittleEndian.Uint64(m[:8])),
 				Plain: base14.BytesToString(sb.Bytes()),
 				Images: func() []byte {
 					m := make(map[string]string)
@@ -340,7 +366,9 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 					}
 					v := make(map[string]uint8, len(words)*2)
 					for _, word := range words {
-						v[word]++
+						if word != "" && word != "\n" && word != " " {
+							v[word]++
+						}
 					}
 					data, err := json.Marshal(v)
 					if err != nil {
@@ -361,7 +389,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 					return nil
 				}
 				var buf [8]byte
-				binary.LittleEndian.PutUint64(buf[:], q.ID)
+				binary.LittleEndian.PutUint64(buf[:], uint64(q.ID))
 				dupmap[hex.EncodeToString(buf[:])] = r
 				return nil
 			})
@@ -372,11 +400,11 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			w := bytes.NewBuffer(make([]byte, 0, 65536))
 			_, err = subdoc.WriteTo(w)
 			var buf [8]byte
-			binary.LittleEndian.PutUint64(buf[:], que.ID)
+			binary.LittleEndian.PutUint64(buf[:], uint64(que.ID))
 			queidstr := hex.EncodeToString(buf[:])
 			if err == nil {
 				m5 := md5.Sum(w.Bytes())
-				quepath := filebasepath + hex.EncodeToString(m5[:]) + ".docx"
+				quepath := questionpath + hex.EncodeToString(m5[:]) + ".docx"
 				f, err := os.Create(quepath)
 				if err == nil {
 					_, _ = io.Copy(f, w)
@@ -420,9 +448,29 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			})
 		}
 		filequestions = append(filequestions, majorq)
+		lst.QuesC += len(majorq.Sub)
 	}
+	progress(90)
 	file.Questions, _ = json.Marshal(filequestions)
-	lst.Path += file.Class + ".docx"
+	_, err = docf.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, err
+	}
+	lst.Path = filebasepath + file.Class + ".docx"
+	lst.HasntAnalyzed = false
+	lst.Desc = fmt.Sprintf("%s%v%v%v%c卷",
+		file.Class, file.Year, file.Type.FirstSecond(), file.Type.MiddleFinal(), file.Type.AB(),
+	)
+	dstf, err := os.Create(lst.Path)
+	if err != nil {
+		return nil, err
+	}
+	defer dstf.Close()
+	_, err = io.Copy(dstf, docf)
+	if err != nil {
+		return nil, err
+	}
+	progress(95)
 	FileDB.mu.Lock()
 	if istemp {
 		err = FileDB.db.Insert(FileTableTempFile, file)
@@ -433,6 +481,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	}
 	_ = FileDB.db.Insert(FileTableList, &lst)
 	FileDB.mu.Unlock()
+	progress(100)
 	return file, err
 }
 
@@ -445,7 +494,7 @@ type QuestionJSON struct {
 }
 
 type Question struct {
-	ID     uint64 // ID is the first 8 bytes of the Plain's md5
+	ID     int64  // ID is the first 8 bytes of the Plain's md5
 	Path   string // Path is the question's docx position
 	Plain  string // Plain is the plain text of the question (like markdown format)
 	Images []byte // Images is json of the image dhash in XML, ex. ['rId1': '1234567890abcdef', ...]

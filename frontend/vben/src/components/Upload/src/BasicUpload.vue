@@ -11,12 +11,6 @@
             {{ fileList.length }}
           </template>
         </template>
-        <a-button @click="openPreviewModal">
-          <Icon icon="bi:eye" />
-          <template v-if="fileList.length && showPreviewNumber">
-            {{ fileList.length }}
-          </template>
-        </a-button>
       </Tooltip>
     </Space>
     <UploadModal
@@ -26,18 +20,10 @@
       @change="handleChange"
       @delete="handleDelete"
     />
-
-    <UploadPreviewModal
-      :value="fileList"
-      @register="registerPreviewModal"
-      @list-change="handlePreviewChange"
-      @delete="handlePreviewDelete"
-    />
   </div>
 </template>
 <script lang="ts">
   import { defineComponent, ref, watch, unref, computed } from 'vue'
-  import { Icon } from '/@/components/Icon'
   import { Tooltip, Space } from 'ant-design-vue'
   import { useModal } from '/@/components/Modal'
   import { uploadContainerProps } from './props'
@@ -45,10 +31,9 @@
   import { useI18n } from '/@/hooks/web/useI18n'
   import { isArray } from '/@/utils/is'
   import UploadModal from './UploadModal.vue'
-  import UploadPreviewModal from './UploadPreviewModal.vue'
   export default defineComponent({
     name: 'BasicUpload',
-    components: { UploadModal, Space, UploadPreviewModal, Icon, Tooltip },
+    components: { UploadModal, Space, Tooltip },
     props: uploadContainerProps,
     emits: ['change', 'delete', 'preview-delete', 'update:value'],
     setup(props, { emit, attrs }) {
@@ -80,12 +65,6 @@
         emit('update:value', fileList.value)
         emit('change', fileList.value)
       }
-      // 预览modal保存操作
-      function handlePreviewChange(urls: string[]) {
-        fileList.value = [...(urls || [])]
-        emit('update:value', fileList.value)
-        emit('change', fileList.value)
-      }
       function handleDelete(record: Recordable) {
         emit('delete', record)
       }
@@ -96,7 +75,6 @@
         registerUploadModal,
         openUploadModal,
         handleChange,
-        handlePreviewChange,
         registerPreviewModal,
         openPreviewModal,
         fileList,

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	sql "github.com/FloatTech/sqlite"
 )
 
 var (
@@ -15,17 +17,21 @@ var (
 
 // List of file path
 type List struct {
-	ID       *int   // ID is self-inc
-	Uploader int    // Uploader is uid
-	UpTime   int64  // UpTime is upload time (unix timestamp)
-	Size     int64  // Size of the original file
-	IsTemp   bool   // IsTemp whether file is temp
-	Path     string // Path of file
+	ID            *int   // ID is self-inc
+	Uploader      int    // Uploader is uid
+	UpName        string // UpName is uploader's name
+	UpTime        int64  // UpTime is upload time (unix timestamp)
+	Size          int64  // Size of the original file
+	QuesC         int    // QuesC 总小题数
+	HasntAnalyzed bool   // HasntAnalyzed whether file has been analyzed
+	IsTemp        bool   // IsTemp whether file is temp
+	Path          string `db:"Path,UNIQUE"` // Path of file, unique
+	Desc          string // Desc is file's description
 }
 
 // SaveFileToTemp copy file to PaperFolder/tmp/uploader/name and add record into list.
-func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string) (err error) {
-	_, err = UserDB.GetUserByID(uploader)
+func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string) (id int, err error) {
+	user, err := UserDB.GetUserByID(uploader)
 	if err != nil {
 		return
 	}
@@ -38,12 +44,16 @@ func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string)
 	if err != nil {
 		return
 	}
-	lst := List{
-		Uploader: uploader,
-		UpTime:   time.Now().Unix(),
-		IsTemp:   true,
-		Path:     tmpdir + "/" + name,
-	}
+	fpath := tmpdir + "/" + name
+	FileDB.mu.RLock()
+	lst, _ := sql.Find[List](&FileDB.db, FileTableList, "WHERE Path='"+fpath+"'")
+	FileDB.mu.RUnlock()
+	lst.Uploader = uploader
+	lst.UpName = user.Name
+	lst.UpTime = time.Now().Unix()
+	lst.HasntAnalyzed = true
+	lst.IsTemp = true
+	lst.Path = fpath
 	ff, err := os.Create(lst.Path)
 	if err != nil {
 		return
@@ -58,5 +68,24 @@ func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string)
 	FileDB.mu.Lock()
 	err = FileDB.db.Insert(FileTableList, &lst)
 	FileDB.mu.Unlock()
+	if err != nil {
+		return
+	}
+	if lst.ID != nil {
+		id = *lst.ID
+		return
+	}
+	FileDB.mu.RLock()
+	err = FileDB.db.Find(FileTableList, &lst, "WHERE Path='"+fpath+"'")
+	FileDB.mu.RUnlock()
+	id = *lst.ID
+	return
+}
+
+// ListUploadedFile will select all file that HasntAnalyzed && IsTemp or !HasntAnalyzed && !IsTemp
+func (f *FileDatabase) ListUploadedFile() (lst []*List, err error) {
+	FileDB.mu.RLock()
+	lst, err = sql.FindAll[List](&FileDB.db, FileTableList, "WHERE (HasntAnalyzed AND IsTemp) OR (NOT HasntAnalyzed AND NOT IsTemp) ORDER BY UpTime DESC")
+	FileDB.mu.RUnlock()
 	return
 }

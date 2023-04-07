@@ -20,12 +20,12 @@ type Regex struct {
 }
 
 func newRegex() (reg Regex) {
-	reg.Title = `.*(\d{4})\s*-.*学年.*(\d?).*([中末]?).*([AB]?)\s*卷`
-	reg.Class = `考试科目：\s*(\S+)\s*`
+	reg.Title = `.*(\d{4})\s*-.*学年.*(\d).*([中末]).*([AB]?)\s*卷`
+	reg.Class = `(考试科目|课程名称)：\s*(\S+)\s*`
 	reg.OpenCl = `考试形式：\s*(\S+)\s*`
-	reg.Date = `考试日期：\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日`
+	reg.Date = `考试日期：\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d*)\s*日`
 	reg.Time = `考试时长：\s*(\d+)\s*分钟`
-	reg.Rate = `成绩构成比例：\s*(.*%)\s*`
+	reg.Rate = `(成绩构成比例|课程成绩构成)：\s*(.*%)\s*`
 	reg.Major = `([一二三四五六七八九十]+)、\s*(.*)\s*（.*([空题]?)\s*(\d*).*共\s*(\d+)\s*分.*）`
 	reg.Sub = `(\d+)、`
 	return
@@ -77,5 +77,6 @@ func (u *UserDatabase) GetUserRegex(id int) (*Regex, error) {
 	u.mu.RLock()
 	_ = u.db.Find(UserTableRegex, &reg, "WHERE ID="+strconv.Itoa(id))
 	u.mu.RUnlock()
+	reg.ID = *user.ID
 	return &reg, nil
 }

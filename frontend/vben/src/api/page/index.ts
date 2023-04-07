@@ -35,8 +35,11 @@ export const delFile = (id: number) => {
 /**
  * @description: Analyze file
  */
-export const analyzeFile = (id: number) => {
-  return defHttp.get<AnalyzeFile>({ url: Api.AnalyzeFile, params: { id: id } })
+export const analyzeFile = (id: number, permanent: boolean) => {
+  return defHttp.get<AnalyzeFile>(
+    { url: Api.AnalyzeFile, params: { id: id, permanent: permanent } },
+    { errorMessageMode: 'none' },
+  )
 }
 
 /**

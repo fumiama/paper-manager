@@ -114,12 +114,12 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			writeresult(w, codeError, nil, "invalid filename", typeError)
 			return
 		}
-		err = global.FileDB.SaveFileToTemp(*user.ID, ff, fn)
+		id, err := global.FileDB.SaveFileToTemp(*user.ID, ff, fn)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		writeresult(w, codeSuccess, "上传"+fn+"成功", messageOk, typeSuccess)
+		writeresult(w, codeSuccess, id, messageOk, typeSuccess)
 		return
 	}
 	if err != http.ErrMissingFile {

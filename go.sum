@@ -1,5 +1,5 @@
-github.com/FloatTech/sqlite v1.6.1 h1:FDQM8X4PtO5P3rP9r5f1qYPFI8YvHPmyPlpeUFbOcDE=
-github.com/FloatTech/sqlite v1.6.1/go.mod h1:zFbHzRfB+CJ+VidfjuVbrcin3DAz283F7hF1hIeHzpY=
+github.com/FloatTech/sqlite v1.6.2 h1:FytbExjpvYalZxxITtmSenHiPGLPUvlz47LY/P0SCCw=
+github.com/FloatTech/sqlite v1.6.2/go.mod h1:zFbHzRfB+CJ+VidfjuVbrcin3DAz283F7hF1hIeHzpY=
 github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b h1:tvciXWq2nuvTbFeJGLDNIdRX3BI546D3O7k7vrVueZw=
 github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b/go.mod h1:fHZFWGquNXuHttu9dUYoKuNbm3dzLETnIOnm1muSfDs=
 github.com/RomiChan/syncx v0.0.0-20221202055724-5f842c53020e h1:wR3MXQ3VbUlPKOOUwLOYgh/QaJThBTYtsl673O3lqSA=
