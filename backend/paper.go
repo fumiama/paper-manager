@@ -84,6 +84,50 @@ func init() {
 		}
 		writeresult(w, codeSuccess, &result, messageOk, typeSuccess)
 	}}
+	apimap["/api/getFileInfo"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		var err error
+		idstr := r.URL.Query().Get("id")
+		if idstr == "" {
+			writeresult(w, codeError, nil, "empty id", typeError)
+			return
+		}
+		id, err := strconv.Atoi(idstr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		lst, err := global.FileDB.GetFileInfo(id)
+		if err != nil && err != sql.ErrNullResult {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		result := filelist{
+			ID:   id,
+			Desc: lst.Desc,
+			Size: float64(lst.Size) / 1024 / 1024, // MB
+			Ques: lst.QuesC,
+			Auth: lst.UpName,
+			Date: time.Unix(lst.UpTime, 0).Format(chineseYYMMDDLayout),
+		}
+		j := strings.LastIndex(lst.Path, "/")
+		if j <= 0 {
+			result.Title = lst.Path
+		} else {
+			result.Title = lst.Path[j+1:]
+		}
+		if !lst.HasntAnalyzed {
+			result.Per = 100
+		} else {
+			result.Per = analyzeper.Get(id)
+		}
+		writeresult(w, codeSuccess, &result, messageOk, typeSuccess)
+	}}
 	apimap["/api/getFilePercent"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
 		user := usertokens.Get(token)
@@ -132,7 +176,12 @@ func init() {
 		}
 		ch := make(chan struct{}, 1)
 		type message struct {
+			C int    `json:"code"` // C 0 success 1 pending
 			M string `json:"msg"`
+		}
+		if analyzeper.Get(id) > 0 {
+			writeresult(w, codeError, nil, "已在分析!", typeError)
+			return
 		}
 		go func() {
 			_, err = global.FileDB.AddFile(id, reg, istemp, func(u uint) { analyzeper.Set(id, u) })
@@ -141,14 +190,14 @@ func init() {
 		}()
 		select {
 		case <-time.After(time.Second):
-			writeresult(w, codeSuccess, &message{M: "正在分析, 请耐心等待..."}, messageOk, typeSuccess)
+			writeresult(w, codeSuccess, &message{C: 1, M: "正在分析, 请耐心等待..."}, messageOk, typeSuccess)
 			return
 		case <-ch:
 			if err != nil {
 				writeresult(w, codeError, nil, err.Error(), typeError)
 				return
 			}
-			writeresult(w, codeSuccess, &message{M: "分析完成"}, messageOk, typeSuccess)
+			writeresult(w, codeSuccess, &message{C: 0, M: "分析完成"}, messageOk, typeSuccess)
 		}
 	}}
 }

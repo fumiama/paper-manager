@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { getFileList, getFilePercent } from '/@/api/page'
+import { getFileList, getFilePercent, getFileInfo } from '/@/api/page'
 import { getFileListModel } from '/@/api/page/model/fileListModel'
 
 export const random = (min: number, max: number) =>
@@ -8,9 +8,9 @@ export const random = (min: number, max: number) =>
 export function refreshFilePercent(item: any) {
   return async () => {
     const p = await getFilePercent(item.id)
-    if (p.percent) {
-      item.percent = p.percent
-      if (p.percent < 100) {
+    if (p) {
+      item.percent = p
+      if (p < 100) {
         setTimeout(refreshFilePercent(item), 1000)
       }
     } else item.hassettimeout = false
@@ -62,9 +62,9 @@ async function refreshFileList() {
   }
 }
 
-export let cardList = reactive(await refreshFileList())
+export const cardList = reactive(await refreshFileList())
 
-export let pagination = reactive({
+export const pagination = reactive({
   current: 1,
   total: cardList._cardList.length,
   show: true,
@@ -77,17 +77,11 @@ export let pagination = reactive({
 
 export function refreshCardList() {
   refreshFileList().then((value) => {
-    cardList = reactive(value)
-    pagination = reactive({
-      current: 1,
-      total: cardList._cardList.length,
-      show: true,
-      pageSize: 10,
-      onChange: function (page: number, pageSize: number) {
-        this.current = page
-        this.pageSize = pageSize
-      },
-    })
+    cardList._cardList = value._cardList
+    cardList._totalQuestions = value._totalQuestions
+    cardList._totalSize = value._totalSize
+    pagination.current = 1
+    pagination.total = cardList._cardList.length
   })
 }
 
@@ -99,5 +93,23 @@ export function deleteFileByID(id: number) {
       cardList._totalQuestions -= value.questions
       pagination.total = cardList._cardList.length
     }
+  })
+}
+
+export function refreshFileByID(id: number) {
+  getFileInfo(id).then((info) => {
+    cardList._cardList.map((value: any) => {
+      if (value.id == id) {
+        cardList._totalSize = cardList._totalSize - value.size + info.size
+        cardList._totalQuestions = cardList._totalQuestions - value.questions + info.questions
+        value.title = info.title
+        value.description = info.description
+        value.size = info.size
+        value.questions = info.questions
+        value.datetime = info.datetime
+        value.author = info.author
+        value.percent = info.percent
+      }
+    })
   })
 }

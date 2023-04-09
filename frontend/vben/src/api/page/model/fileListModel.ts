@@ -14,14 +14,11 @@ export interface FileListGroupItem {
  */
 export type getFileListModel = FileListGroupItem[]
 
-export interface FilePercent {
-  percent: number
-}
-
 export interface DelFile {
   msg: string
 }
 
 export interface AnalyzeFile {
+  code: number
   msg: string
 }

@@ -110,6 +110,7 @@
     refreshFilePercent,
     random,
     refreshCardList,
+    refreshFileByID,
   } from './data'
   import { PageWrapper } from '/@/components/Page'
   import { useMessage } from '/@/hooks/web/useMessage'
@@ -120,7 +121,6 @@
   import { useI18n } from '/@/hooks/web/useI18n'
   import { delFile, analyzeFile } from '/@/api/page'
   import { useGo } from '/@/hooks/web/usePage'
-  import { useTabs } from '/@/hooks/web/useTabs'
 
   const { t } = useI18n()
   const { createMessage } = useMessage()
@@ -149,6 +149,11 @@
       const msg = await analyzeFile(item.id, true)
       if (msg) {
         createMessage.success(msg.msg)
+        if (msg.code == 0) {
+          item.percent = 100
+          refreshFileByID(item.id)
+          return
+        }
         if (!item.hassettimeout && item.percent == 0) {
           setTimeout(refreshFilePercent(item), 1000 + random(0, 1000))
           item.hassettimeout = true
@@ -173,7 +178,6 @@
     },
     setup() {
       const { hasPermission } = usePermission()
-      const { refreshPage } = useTabs()
       const go = useGo()
 
       function openFile(id: number) {
@@ -182,7 +186,6 @@
 
       async function onChange(_: number[]) {
         refreshCardList()
-        refreshPage()
       }
 
       return {

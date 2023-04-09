@@ -25,7 +25,7 @@ type List struct {
 	QuesC         int    // QuesC 总小题数
 	HasntAnalyzed bool   // HasntAnalyzed whether file has been analyzed
 	IsTemp        bool   // IsTemp whether file is temp
-	Path          string `db:"Path,UNIQUE"` // Path of file, unique
+	Path          string // Path of file, normally unique
 	Desc          string // Desc is file's description
 }
 
@@ -86,6 +86,13 @@ func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string)
 func (f *FileDatabase) ListUploadedFile() (lst []*List, err error) {
 	FileDB.mu.RLock()
 	lst, err = sql.FindAll[List](&FileDB.db, FileTableList, "WHERE (HasntAnalyzed AND IsTemp) OR (NOT HasntAnalyzed AND NOT IsTemp) ORDER BY UpTime DESC")
+	FileDB.mu.RUnlock()
+	return
+}
+
+func (f *FileDatabase) GetFileInfo(id int) (lst List, err error) {
+	FileDB.mu.RLock()
+	lst, err = sql.Find[List](&FileDB.db, FileTableList, "WHERE ID="+strconv.Itoa(id))
 	FileDB.mu.RUnlock()
 	return
 }
