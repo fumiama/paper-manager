@@ -45,9 +45,9 @@ func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string)
 		return
 	}
 	fpath := tmpdir + "/" + name
-	FileDB.mu.RLock()
-	lst, _ := sql.Find[List](&FileDB.db, FileTableList, "WHERE Path='"+fpath+"'")
-	FileDB.mu.RUnlock()
+	f.mu.RLock()
+	lst, _ := sql.Find[List](&f.db, FileTableList, "WHERE Path='"+fpath+"'")
+	f.mu.RUnlock()
 	lst.Uploader = uploader
 	lst.UpName = user.Name
 	lst.UpTime = time.Now().Unix()
@@ -65,9 +65,9 @@ func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string)
 		return
 	}
 	lst.Size = sz
-	FileDB.mu.Lock()
-	err = FileDB.db.Insert(FileTableList, &lst)
-	FileDB.mu.Unlock()
+	f.mu.Lock()
+	err = f.db.Insert(FileTableList, &lst)
+	f.mu.Unlock()
 	if err != nil {
 		return
 	}
@@ -75,24 +75,24 @@ func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string)
 		id = *lst.ID
 		return
 	}
-	FileDB.mu.RLock()
-	err = FileDB.db.Find(FileTableList, &lst, "WHERE Path='"+fpath+"'")
-	FileDB.mu.RUnlock()
+	f.mu.RLock()
+	err = f.db.Find(FileTableList, &lst, "WHERE Path='"+fpath+"'")
+	f.mu.RUnlock()
 	id = *lst.ID
 	return
 }
 
 // ListUploadedFile will select all file that HasntAnalyzed && IsTemp or !HasntAnalyzed && !IsTemp
 func (f *FileDatabase) ListUploadedFile() (lst []*List, err error) {
-	FileDB.mu.RLock()
-	lst, err = sql.FindAll[List](&FileDB.db, FileTableList, "WHERE (HasntAnalyzed AND IsTemp) OR (NOT HasntAnalyzed AND NOT IsTemp) ORDER BY UpTime DESC")
-	FileDB.mu.RUnlock()
+	f.mu.RLock()
+	lst, err = sql.FindAll[List](&f.db, FileTableList, "WHERE (HasntAnalyzed AND IsTemp) OR (NOT HasntAnalyzed AND NOT IsTemp) ORDER BY UpTime DESC")
+	f.mu.RUnlock()
 	return
 }
 
 func (f *FileDatabase) GetFileInfo(id int) (lst List, err error) {
-	FileDB.mu.RLock()
-	lst, err = sql.Find[List](&FileDB.db, FileTableList, "WHERE ID="+strconv.Itoa(id))
-	FileDB.mu.RUnlock()
+	f.mu.RLock()
+	lst, err = sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(id))
+	f.mu.RUnlock()
 	return
 }

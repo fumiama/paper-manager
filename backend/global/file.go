@@ -117,7 +117,9 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		return nil, ErrInvalidRole
 	}
 	progress(1)
-	lst, err := sql.Find[List](&FileDB.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
+	f.mu.RLock()
+	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
+	f.mu.RUnlock()
 	if err != nil {
 		return nil, err
 	}
@@ -380,8 +382,8 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			}
 			var q Question
 			dupmap := make(map[string]float64, 64)
-			FileDB.mu.RLock()
-			err = FileDB.db.FindFor(FileTableQuestion, &q, "", func() error {
+			f.mu.RLock()
+			err = f.db.FindFor(FileTableQuestion, &q, "", func() error {
 				r, err := q.GetDuplicateRate(que)
 				if err != nil {
 					logrus.Warnln("[global.AddFile] GetDuplicateRate err:", err)
@@ -395,7 +397,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 				dupmap[hex.EncodeToString(buf[:])] = r
 				return nil
 			})
-			FileDB.mu.RUnlock()
+			f.mu.RUnlock()
 			if err == nil && len(dupmap) > 0 {
 				que.Dup, _ = json.Marshal(dupmap)
 			}
@@ -407,20 +409,20 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			if err == nil {
 				m5 := md5.Sum(w.Bytes())
 				quepath := questionpath + hex.EncodeToString(m5[:]) + ".docx"
-				f, err := os.Create(quepath)
+				qf, err := os.Create(quepath)
 				if err == nil {
-					_, _ = io.Copy(f, w)
-					_ = f.Close()
+					_, _ = io.Copy(qf, w)
+					_ = qf.Close()
 				}
 				que.Path = quepath
 				if istemp {
-					FileDB.mu.Lock()
-					_ = FileDB.db.Insert(FileTableTempQuestion, que)
-					FileDB.mu.Unlock()
+					f.mu.Lock()
+					_ = f.db.Insert(FileTableTempQuestion, que)
+					f.mu.Unlock()
 				} else {
-					FileDB.mu.Lock()
+					f.mu.Lock()
 					for k, v := range dupmap {
-						err = FileDB.db.Find(FileTableQuestion, &q, "WHERE ID=0x"+k)
+						err = f.db.Find(FileTableQuestion, &q, "WHERE ID=0x"+k)
 						if err == nil {
 							thismap := make(map[string]float64, 64)
 							err := json.Unmarshal(q.Dup, &thismap)
@@ -428,13 +430,13 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 								thismap[queidstr] = v
 								q.Dup, err = json.Marshal(thismap)
 								if err == nil {
-									_ = FileDB.db.Insert(FileTableQuestion, &q)
+									_ = f.db.Insert(FileTableQuestion, &q)
 								}
 							}
 						}
 					}
-					_ = FileDB.db.Insert(FileTableQuestion, que)
-					FileDB.mu.Unlock()
+					_ = f.db.Insert(FileTableQuestion, que)
+					f.mu.Unlock()
 				}
 			}
 			r := 0.0
@@ -473,16 +475,64 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		return nil, err
 	}
 	progress(95)
-	FileDB.mu.Lock()
+	f.mu.Lock()
 	if istemp {
-		err = FileDB.db.Insert(FileTableTempFile, file)
+		err = f.db.Insert(FileTableTempFile, file)
 		lst.IsTemp = true
 	} else {
-		err = FileDB.db.Insert(FileTableFile, file)
+		err = f.db.Insert(FileTableFile, file)
 		lst.IsTemp = false
 	}
-	_ = FileDB.db.Insert(FileTableList, &lst)
-	FileDB.mu.Unlock()
+	_ = f.db.Insert(FileTableList, &lst)
+	f.mu.Unlock()
 	progress(100)
 	return file, err
+}
+
+// DelFile by listid
+func (f *FileDatabase) DelFile(fileid, uid int, istemp bool) error {
+	user, err := UserDB.GetUserByID(uid)
+	if err != nil {
+		return err
+	}
+	if !user.IsSuper() {
+		return ErrInvalidRole
+	}
+	var file File
+	f.mu.RLock()
+	if istemp {
+		file, err = sql.Find[File](&f.db, FileTableTempFile, "WHERE ID="+strconv.Itoa(fileid))
+	} else {
+		file, err = sql.Find[File](&f.db, FileTableFile, "WHERE ID="+strconv.Itoa(fileid))
+	}
+	f.mu.RUnlock()
+	if err != nil {
+		return err
+	}
+	f.mu.RLock()
+	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(file.ListID))
+	f.mu.RUnlock()
+	if err != nil {
+		return err
+	}
+	if lst.Path == "" || strings.Contains(lst.Path, "..") {
+		return os.ErrNotExist
+	}
+	ques := make([]QuestionJSON, 0, 64)
+	err = json.Unmarshal(file.Questions, &ques)
+	if err != nil {
+		return err
+	}
+	for _, q := range ques {
+		q.Delete(f, istemp)
+	}
+	if istemp {
+		err = f.db.Del(FileTableTempFile, "WHERE ID="+strconv.Itoa(fileid))
+	} else {
+		err = f.db.Del(FileTableFile, "WHERE ID="+strconv.Itoa(fileid))
+	}
+	if err != nil {
+		logrus.Warnln("[global.DelFile] err:", err)
+	}
+
 }

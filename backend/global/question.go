@@ -4,9 +4,11 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"strconv"
 
 	"github.com/corona10/goimagehash"
 	"github.com/fumiama/paper-manager/backend/utils"
+	"github.com/sirupsen/logrus"
 )
 
 // QuestionJSON is the struct representation of File.Questions
@@ -15,6 +17,29 @@ type QuestionJSON struct {
 	Points int            `json:"points,omitempty"` // Points is sum of subs' points or self
 	Rate   float64        `json:"rate,omitempty"`   // Rate is the avg(non-leaf) or max(leaf) similarity
 	Sub    []QuestionJSON `json:"sub,omitempty"`
+}
+
+// Delete me and all subs
+func (q *QuestionJSON) Delete(f *FileDatabase, istemp bool) {
+	if b, err := hex.DecodeString(q.Name); err == nil {
+		err = f.DelQuestion(int64(binary.LittleEndian.Uint64(b)), istemp)
+		if err != nil {
+			logrus.Warnln("[global.QuestionJSON] Delete", q.Name, "err:", err)
+		}
+	}
+	for _, sq := range q.Sub {
+		sq.Delete(f, istemp)
+	}
+}
+
+// DelQuestion 删除问题, 其它问题的 dup 可能会残留有 id, 使用时需要排除
+func (f *FileDatabase) DelQuestion(id int64, istemp bool) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if istemp {
+		return f.db.Del(FileTableTempQuestion, "WHERE ID="+strconv.FormatInt(id, 10))
+	}
+	return f.db.Del(FileTableQuestion, "WHERE ID="+strconv.FormatInt(id, 10))
 }
 
 type Question struct {
