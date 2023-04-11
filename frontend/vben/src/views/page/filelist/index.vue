@@ -130,7 +130,7 @@
       item.delloading = true
       const msg = await delFile(item.id)
       if (msg) {
-        createMessage.success(msg.msg)
+        createMessage.success(msg)
         setTimeout(() => {
           deleteFileByID(item.id)
         }, 1000)

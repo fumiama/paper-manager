@@ -1,5 +1,5 @@
 import { defHttp } from '/@/utils/http/axios'
-import { getFileListModel, DelFile, AnalyzeFile, FileListGroupItem } from './model/fileListModel'
+import { getFileListModel, AnalyzeFile, FileListGroupItem } from './model/fileListModel'
 import { DownloadFile, FileStatus } from './model/fileModel'
 
 enum Api {
@@ -37,7 +37,7 @@ export const getFilePercent = (id: number) => {
  * @description: Get file percent
  */
 export const delFile = (id: number) => {
-  return defHttp.get<DelFile>({ url: Api.DelFile, params: { id: id } })
+  return defHttp.get<string>({ url: Api.DelFile, params: { id: id } })
 }
 
 /**

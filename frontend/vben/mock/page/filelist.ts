@@ -70,7 +70,7 @@ export default [
       })
     },
   },*/
-  {
+  /*{
     url: '/api/delFile',
     timeout: 200,
     method: 'get',
@@ -84,7 +84,7 @@ export default [
         msg: '已成功删除文件' + id + '.',
       })
     },
-  },
+  },*/
   /*{
     url: '/api/analyzeFile',
     timeout: 1000,

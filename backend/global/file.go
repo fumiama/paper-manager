@@ -490,7 +490,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 }
 
 // DelFile by listid
-func (f *FileDatabase) DelFile(fileid, uid int, istemp bool) error {
+func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 	user, err := UserDB.GetUserByID(uid)
 	if err != nil {
 		return err
@@ -498,19 +498,14 @@ func (f *FileDatabase) DelFile(fileid, uid int, istemp bool) error {
 	if !user.IsSuper() {
 		return ErrInvalidRole
 	}
-	var file File
-	f.mu.RLock()
+	ftable := ""
 	if istemp {
-		file, err = sql.Find[File](&f.db, FileTableTempFile, "WHERE ID="+strconv.Itoa(fileid))
+		ftable = FileTableTempFile
 	} else {
-		file, err = sql.Find[File](&f.db, FileTableFile, "WHERE ID="+strconv.Itoa(fileid))
-	}
-	f.mu.RUnlock()
-	if err != nil {
-		return err
+		ftable = FileTableFile
 	}
 	f.mu.RLock()
-	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(file.ListID))
+	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
 	f.mu.RUnlock()
 	if err != nil {
 		return err
@@ -518,21 +513,33 @@ func (f *FileDatabase) DelFile(fileid, uid int, istemp bool) error {
 	if lst.Path == "" || strings.Contains(lst.Path, "..") {
 		return os.ErrNotExist
 	}
-	ques := make([]QuestionJSON, 0, 64)
-	err = json.Unmarshal(file.Questions, &ques)
-	if err != nil {
-		return err
+	i := strings.LastIndex(lst.Path, "/")
+	if i <= 0 {
+		return os.ErrNotExist
 	}
-	for _, q := range ques {
-		q.Delete(f, istemp)
+	parentfolder := lst.Path[:i]
+	if utils.IsNotExist(parentfolder) {
+		return os.ErrNotExist
 	}
-	if istemp {
-		err = f.db.Del(FileTableTempFile, "WHERE ID="+strconv.Itoa(fileid))
-	} else {
-		err = f.db.Del(FileTableFile, "WHERE ID="+strconv.Itoa(fileid))
+	if !lst.HasntAnalyzed {
+		f.mu.RLock()
+		file, err := sql.Find[File](&f.db, ftable, "WHERE ListID="+strconv.Itoa(lstid))
+		f.mu.RUnlock()
+		if err != nil {
+			return err
+		}
+		err = f.db.Del(ftable, "WHERE ListID="+strconv.Itoa(lstid))
+		if err != nil {
+			return err
+		}
+		ques := make([]QuestionJSON, 0, 64)
+		err = json.Unmarshal(file.Questions, &ques)
+		if err != nil {
+			return err
+		}
+		for _, q := range ques {
+			q.Delete(f, istemp)
+		}
 	}
-	if err != nil {
-		logrus.Warnln("[global.DelFile] err:", err)
-	}
-
+	return os.RemoveAll(parentfolder)
 }

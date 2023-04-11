@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"strconv"
 
+	sql "github.com/FloatTech/sqlite"
 	"github.com/corona10/goimagehash"
+	base14 "github.com/fumiama/go-base16384"
 	"github.com/fumiama/paper-manager/backend/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -19,7 +21,7 @@ type QuestionJSON struct {
 	Sub    []QuestionJSON `json:"sub,omitempty"`
 }
 
-// Delete me and all subs
+// Delete me and all subs, ignore errors
 func (q *QuestionJSON) Delete(f *FileDatabase, istemp bool) {
 	if b, err := hex.DecodeString(q.Name); err == nil {
 		err = f.DelQuestion(int64(binary.LittleEndian.Uint64(b)), istemp)
@@ -32,14 +34,49 @@ func (q *QuestionJSON) Delete(f *FileDatabase, istemp bool) {
 	}
 }
 
-// DelQuestion 删除问题, 其它问题的 dup 可能会残留有 id, 使用时需要排除
+// DelQuestion 删除问题, 与其它问题的 dup
 func (f *FileDatabase) DelQuestion(id int64, istemp bool) error {
+	qtable := ""
+	if istemp {
+		qtable = FileTableTempQuestion
+	} else {
+		qtable = FileTableQuestion
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if istemp {
-		return f.db.Del(FileTableTempQuestion, "WHERE ID="+strconv.FormatInt(id, 10))
+	q, err := sql.Find[Question](&f.db, qtable, "WHERE ID="+strconv.FormatInt(id, 10))
+	if err != nil {
+		return err
 	}
-	return f.db.Del(FileTableQuestion, "WHERE ID="+strconv.FormatInt(id, 10))
+	if len(q.Dup) > 2 {
+		dupmap := make(map[string]float64, 64)
+		err = json.Unmarshal(q.Dup, &dupmap)
+		if err == nil {
+			var buf [8]byte
+			for k := range dupmap {
+				_, err = hex.Decode(buf[:], base14.StringToBytes(k))
+				if err == nil {
+					qid := int64(binary.LittleEndian.Uint64(buf[:]))
+					qq, err := sql.Find[Question](&f.db, qtable, "WHERE ID="+strconv.FormatInt(qid, 10))
+					if err == nil && len(qq.Dup) > 2 {
+						dupmap2 := make(map[string]float64, 64)
+						err = json.Unmarshal(qq.Dup, &dupmap2)
+						if err == nil {
+							delete(dupmap2, k)
+							qq.Dup, err = json.Marshal(dupmap2)
+							if err == nil {
+								err = f.db.Insert(qtable, &qq)
+								if err != nil {
+									logrus.Warnln("[global.DelQuestion] insert modified dup to id", k, "table", qtable, "err:", err)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return f.db.Del(qtable, "WHERE ID="+strconv.FormatInt(id, 10))
 }
 
 type Question struct {

@@ -23,6 +23,7 @@ var analyzeper = ttl.NewCache[int, uint](time.Hour)
 
 var (
 	errNoAnalyzePermission = errors.New("no analyze permission")
+	errNoDeletePermission  = errors.New("no delete permission")
 )
 
 type filelist struct {
@@ -199,6 +200,34 @@ func init() {
 			}
 			writeresult(w, codeSuccess, &message{C: 0, M: "分析完成"}, messageOk, typeSuccess)
 		}
+	}}
+	apimap["/api/delFile"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		if !user.IsSuper() {
+			writeresult(w, codeError, nil, errNoDeletePermission.Error(), typeError)
+			return
+		}
+		idstr := r.URL.Query().Get("id")
+		if idstr == "" {
+			writeresult(w, codeError, nil, "empty id", typeError)
+			return
+		}
+		id, err := strconv.Atoi(idstr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		err = global.FileDB.DelFile(id, *user.ID, false)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, "删除成功", messageOk, typeSuccess)
 	}}
 }
 
