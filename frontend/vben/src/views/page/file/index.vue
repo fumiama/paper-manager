@@ -22,6 +22,7 @@
   import { PageEnum } from '/@/enums/pageEnum'
   import { useI18n } from '/@/hooks/web/useI18n'
   import { downloadByData } from '/@/utils/file/download'
+  import { getToken } from '/@/utils/auth'
   import axios from 'axios'
 
   const { t } = useI18n()
@@ -85,10 +86,12 @@
         try {
           const ret = await downloadFile(Number(params.value.id))
           if (ret && ret.url) {
+            const token = getToken() as string
             const { data } = await axios({
               method: 'get',
               responseType: 'blob',
               url: ret.url,
+              headers: { Authorization: token },
             })
             if (data) {
               loadDocx(data)

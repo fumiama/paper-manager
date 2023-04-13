@@ -2,7 +2,7 @@ import { MockMethod } from 'vite-plugin-mock'
 import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
 
 export default [
-  {
+  /*{
     url: '/api/dlFile',
     timeout: 1000,
     method: 'get',
@@ -15,7 +15,7 @@ export default [
         url: '/file/' + id + '.docx',
       })
     },
-  },
+  },*/
   {
     url: '/api/getFileStatus',
     timeout: 500,

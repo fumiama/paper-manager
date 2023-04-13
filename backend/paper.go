@@ -22,8 +22,9 @@ const (
 var analyzeper = ttl.NewCache[int, uint](time.Hour)
 
 var (
-	errNoAnalyzePermission = errors.New("no analyze permission")
-	errNoDeletePermission  = errors.New("no delete permission")
+	errNoAnalyzePermission  = errors.New("no analyze permission")
+	errNoDeletePermission   = errors.New("no delete permission")
+	errNoDownloadPermission = errors.New("no download permission")
 )
 
 type filelist struct {
@@ -229,23 +230,100 @@ func init() {
 		}
 		writeresult(w, codeSuccess, "删除成功", messageOk, typeSuccess)
 	}}
+	apimap["/api/dlFile"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		if !user.IsSuper() {
+			writeresult(w, codeError, nil, errNoDeletePermission.Error(), typeError)
+			return
+		}
+		idstr := r.URL.Query().Get("id")
+		if idstr == "" {
+			writeresult(w, codeError, nil, "empty id", typeError)
+			return
+		}
+		id, err := strconv.Atoi(idstr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		lst, err := global.FileDB.GetFileInfo(id)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		type message struct {
+			URL string `json:"url"`
+		}
+		if strings.HasPrefix(lst.Path, global.PaperFolder+"tmp/") {
+			uidstr := lst.Path[17:]
+			i := strings.Index(uidstr, "/")
+			if i <= 0 {
+				writeresult(w, codeError, nil, "extract uid error", typeError)
+				return
+			}
+			uid, err := strconv.Atoi(uidstr[:i])
+			if err != nil {
+				writeresult(w, codeError, nil, err.Error(), typeError)
+				return
+			}
+			if uid != *user.ID {
+				writeresult(w, codeError, nil, errNoDownloadPermission.Error(), typeError)
+				return
+			}
+			writeresult(w, codeSuccess, &message{URL: lst.Path[6:]}, messageOk, typeSuccess)
+			return
+		}
+		if strings.HasPrefix(lst.Path, global.PaperFolder) {
+			writeresult(w, codeSuccess, &message{URL: lst.Path[6:]}, messageOk, typeSuccess)
+			return
+		}
+		writeresult(w, codeError, nil, "parse filepath error", typeError)
+	}}
 }
 
-// PaperHandler serves protected contents in global.FileFolder
+// PaperHandler serves protected contents in global.PaperFolder
 func PaperHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.IsMethod("GET", w, r) {
+		return
+	}
+	token := r.Header.Get("Authorization")
+	user := usertokens.Get(token)
+	if user == nil {
+		writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
 		return
 	}
 	global.UserDB.VisitAPI()
 	if r.URL.Path[0] != '/' {
 		r.URL.Path = "/" + r.URL.Path
 	}
-	fn := r.URL.Path[6:]
+	fn := r.URL.Path[7:] // skip /paper/
 	if fn == "" {
 		http.Error(w, "400 Bad Request: empty path", http.StatusBadRequest)
 		return
 	}
-	name := global.FileFolder + fn
-	logrus.Infoln("[file.FileHandler] serve", name)
+	if strings.HasPrefix(fn, "tmp/") {
+		uidstr := fn[4:]
+		i := strings.Index(uidstr, "/")
+		if i <= 0 {
+			writeresult(w, codeError, nil, "extract uid error", typeError)
+			return
+		}
+		uid, err := strconv.Atoi(uidstr[:i])
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		if uid != *user.ID {
+			writeresult(w, codeError, nil, errNoDownloadPermission.Error(), typeError)
+			return
+		}
+	}
+	name := global.PaperFolder + fn
+	logrus.Infoln("[file.PaperHandler] serve", name)
 	http.ServeFile(w, r, name)
 }

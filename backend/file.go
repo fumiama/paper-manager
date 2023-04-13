@@ -17,7 +17,7 @@ func FileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path[0] != '/' {
 		r.URL.Path = "/" + r.URL.Path
 	}
-	fn := r.URL.Path[6:]
+	fn := r.URL.Path[6:] // skip /file/
 	if fn == "" {
 		http.Error(w, "400 Bad Request: empty path", http.StatusBadRequest)
 		return

@@ -1,7 +1,7 @@
 import { MockMethod } from 'vite-plugin-mock'
-import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
+// import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
 
-const deletedIDs: number[] = []
+// const deletedIDs: number[] = []
 
 // const analyzingIDs: { id: number; per: number }[] = []
 
