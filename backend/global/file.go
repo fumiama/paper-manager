@@ -255,12 +255,12 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		}
 	}
 	progress(19)
-	if file.Class == "" || strings.Contains(file.Class, "..") {
+	if file.Class == "" || strings.Contains(file.Class, "..") || strings.ContainsAny(file.Class, `/\`) {
 		return nil, ErrEmptyClass
 	}
 	filebasepath := ""
 	if istemp {
-		filebasepath = PaperFolder + "temp/" + strconv.Itoa(*user.ID) + "/"
+		filebasepath = PaperFolder + "temp/" + strconv.Itoa(*user.ID) + "/" + file.Class + "/"
 	} else {
 		filebasepath = fmt.Sprintf(
 			PaperFolder+file.Class+"/%v/%v/%v/%c/",
@@ -513,6 +513,13 @@ func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 	if lst.Path == "" || strings.Contains(lst.Path, "..") {
 		return os.ErrNotExist
 	}
+	err = f.db.Del(FileTableList, "WHERE ID="+strconv.Itoa(lstid))
+	if err != nil {
+		return err
+	}
+	if lst.HasntAnalyzed {
+		return os.RemoveAll(lst.Path)
+	}
 	i := strings.LastIndex(lst.Path, "/")
 	if i <= 0 {
 		return os.ErrNotExist
@@ -521,25 +528,23 @@ func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 	if utils.IsNotExist(parentfolder) {
 		return os.ErrNotExist
 	}
-	if !lst.HasntAnalyzed {
-		f.mu.RLock()
-		file, err := sql.Find[File](&f.db, ftable, "WHERE ListID="+strconv.Itoa(lstid))
-		f.mu.RUnlock()
-		if err != nil {
-			return err
-		}
-		err = f.db.Del(ftable, "WHERE ListID="+strconv.Itoa(lstid))
-		if err != nil {
-			return err
-		}
-		ques := make([]QuestionJSON, 0, 64)
-		err = json.Unmarshal(file.Questions, &ques)
-		if err != nil {
-			return err
-		}
-		for _, q := range ques {
-			q.Delete(f, istemp)
-		}
+	f.mu.RLock()
+	file, err := sql.Find[File](&f.db, ftable, "WHERE ListID="+strconv.Itoa(lstid))
+	f.mu.RUnlock()
+	if err != nil {
+		return err
+	}
+	err = f.db.Del(ftable, "WHERE ListID="+strconv.Itoa(lstid))
+	if err != nil {
+		return err
+	}
+	ques := make([]QuestionJSON, 0, 64)
+	err = json.Unmarshal(file.Questions, &ques)
+	if err != nil {
+		return err
+	}
+	for _, q := range ques {
+		q.Delete(f, istemp)
 	}
 	return os.RemoveAll(parentfolder)
 }
