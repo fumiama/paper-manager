@@ -258,10 +258,11 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
 }
 export const defHttp = createAxios()
 
-// other api url
-// export const otherHttp = createAxios({
-//   requestOptions: {
-//     apiUrl: 'xxx',
-//     urlPrefix: 'xxx',
-//   },
-// });
+// download paper
+export const paperHttp = createAxios({
+  requestOptions: {
+    apiUrl: '',
+    urlPrefix: '',
+    isTransformResponse: false,
+  },
+})

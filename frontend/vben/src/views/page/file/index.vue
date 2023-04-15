@@ -15,15 +15,13 @@
   import { PageWrapper } from '/@/components/Page'
   import { useECharts } from '/@/hooks/web/useECharts'
   import { renderAsync } from 'docx-preview'
-  import { downloadFile, getFileStatus } from '/@/api/page'
+  import { downloadFile, getFileStatus, getFileBlob } from '/@/api/page'
   import { useMessage } from '/@/hooks/web/useMessage'
   import { useGo } from '/@/hooks/web/usePage'
   import { useTabs } from '/@/hooks/web/useTabs'
   import { PageEnum } from '/@/enums/pageEnum'
   import { useI18n } from '/@/hooks/web/useI18n'
   import { downloadByData } from '/@/utils/file/download'
-  import { getToken } from '/@/utils/auth'
-  import axios from 'axios'
 
   const { t } = useI18n()
 
@@ -86,13 +84,7 @@
         try {
           const ret = await downloadFile(Number(params.value.id))
           if (ret && ret.url) {
-            const token = getToken() as string
-            const { data } = await axios({
-              method: 'get',
-              responseType: 'blob',
-              url: ret.url,
-              headers: { Authorization: token },
-            })
+            const data = await getFileBlob(ret.url)
             if (data) {
               loadDocx(data)
               return

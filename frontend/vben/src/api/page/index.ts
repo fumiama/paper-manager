@@ -1,4 +1,4 @@
-import { defHttp } from '/@/utils/http/axios'
+import { defHttp, paperHttp } from '/@/utils/http/axios'
 import { getFileListModel, AnalyzeFile, FileListGroupItem } from './model/fileListModel'
 import { DownloadFile, FileStatus } from './model/fileModel'
 
@@ -55,6 +55,16 @@ export const analyzeFile = (id: number, permanent: boolean) => {
  */
 export const downloadFile = (id: number) => {
   return defHttp.get<DownloadFile>({ url: Api.DlFile, params: { id: id } })
+}
+
+/**
+ * @description: Download file to blob
+ */
+export const getFileBlob = (url: string) => {
+  return paperHttp.get<any>({
+    responseType: 'blob',
+    url: url,
+  })
 }
 
 /**

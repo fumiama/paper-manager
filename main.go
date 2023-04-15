@@ -31,6 +31,7 @@ func main() {
 
 	http.HandleFunc("/api/", backend.APIHandler)
 	http.HandleFunc("/file/", backend.FileHandler)
+	http.HandleFunc("/paper/", backend.PaperHandler)
 	http.HandleFunc("/upload", backend.UploadHandler)
 
 	logrus.Infoln("[http.Serve] start at", l.Addr())
