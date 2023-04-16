@@ -39,8 +39,10 @@ const (
 )
 
 var (
-	ErrMajorSplitsTooShort = errors.New("major splits too short")
-	ErrEmptyClass          = errors.New("empty class")
+	ErrMajorSplitsTooShort       = errors.New("major splits too short")
+	ErrEmptyClass                = errors.New("empty class")
+	ErrHasntAnalyzed             = errors.New("hasn't analyzed")
+	ErrNoGetFileStatusPermission = errors.New("no get file status permission")
 )
 
 func init() {
@@ -108,61 +110,61 @@ func (sy StudyYear) String() string {
 
 // AddFile from lst and copy it to analyzed path.
 // The para reg must belong to a valid user
-func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func(uint)) (*File, error) {
+func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func(uint)) error {
 	user, err := UserDB.GetUserByID(reg.ID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !user.IsFileManager() && !istemp {
-		return nil, ErrInvalidRole
+		return ErrInvalidRole
 	}
 	progress(1)
 	f.mu.RLock()
 	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
 	f.mu.RUnlock()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if lst.Path == "" || strings.Contains(lst.Path, "..") {
-		return nil, os.ErrNotExist
+		return os.ErrNotExist
 	}
 	tempath := lst.Path
 	docf, err := os.Open(tempath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer docf.Close()
 	progress(2)
 	h := md5.New()
 	_, err = io.Copy(h, docf)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	var buf [md5.Size]byte
 	id := int64(binary.LittleEndian.Uint64(h.Sum(buf[:0])))
 	_, err = docf.Seek(0, io.SeekStart)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	stat, err := docf.Stat()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	sz := stat.Size()
 	progress(3)
 	doc, err := docx.Parse(docf, sz)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	progress(5)
 	doc.Document.Body.DropDrawingOf("NilPicture")
 	majorre, err := regexp.Compile(reg.Major)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	docs := doc.SplitByParagraph(docx.SplitDocxByPlainTextRegex(majorre))
 	if len(docs) < 2 {
-		return nil, ErrMajorSplitsTooShort
+		return ErrMajorSplitsTooShort
 	}
 	progress(9)
 	// filling File struct
@@ -172,27 +174,27 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	}
 	titlere, err := regexp.Compile(reg.Title)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	classre, err := regexp.Compile(reg.Class)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	opclre, err := regexp.Compile(reg.OpenCl)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	datere, err := regexp.Compile(reg.Date)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	timere, err := regexp.Compile(reg.Time)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	ratere, err := regexp.Compile(reg.Rate)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	progress(10)
 	for _, it := range docs[0].Document.Body.Items {
@@ -203,7 +205,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 				years, semesters, mfs, abs := title[1], title[2], title[3], title[4]
 				y, err := strconv.Atoi(years)
 				if err != nil {
-					return nil, err
+					return err
 				}
 				file.Year = StudyYear(y)
 				if len(semesters) > 0 {
@@ -256,7 +258,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	}
 	progress(19)
 	if file.Class == "" || strings.Contains(file.Class, "..") || strings.ContainsAny(file.Class, `/\`) {
-		return nil, ErrEmptyClass
+		return ErrEmptyClass
 	}
 	filebasepath := ""
 	if istemp {
@@ -270,13 +272,13 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	questionpath := filebasepath + "questions/"
 	err = os.MkdirAll(questionpath, 0755)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	docs = docs[1:]
 	// parse questions
 	subre, err := regexp.Compile(reg.Sub)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	filequestions := make([]QuestionJSON, 0, len(docs))
 	lst.QuesC = 0
@@ -458,7 +460,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	file.Questions, _ = json.Marshal(filequestions)
 	_, err = docf.Seek(0, io.SeekStart)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	lst.Path = filebasepath + file.Class + ".docx"
 	lst.HasntAnalyzed = false
@@ -467,12 +469,12 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	)
 	dstf, err := os.Create(lst.Path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer dstf.Close()
 	_, err = io.Copy(dstf, docf)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	progress(95)
 	f.mu.Lock()
@@ -486,7 +488,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	_ = f.db.Insert(FileTableList, &lst)
 	f.mu.Unlock()
 	progress(100)
-	return file, err
+	return err
 }
 
 // DelFile by listid
@@ -547,4 +549,31 @@ func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 		q.Delete(f, istemp)
 	}
 	return os.RemoveAll(parentfolder)
+}
+
+// GetFile get analyzed file's structure from List(ID)
+func (f *FileDatabase) GetFile(lstid, uid int) (*File, int64, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
+	if err != nil {
+		return nil, 0, err
+	}
+	if lst.HasntAnalyzed {
+		return nil, 0, ErrHasntAnalyzed
+	}
+	if lst.IsTemp && lst.Uploader != uid {
+		return nil, 0, ErrNoGetFileStatusPermission
+	}
+	ftable := ""
+	if lst.IsTemp {
+		ftable = FileTableTempFile
+	} else {
+		ftable = FileTableFile
+	}
+	file, err := sql.Find[File](&f.db, ftable, "WHERE ListID="+strconv.Itoa(lstid))
+	if err != nil {
+		return nil, 0, err
+	}
+	return &file, lst.Size, nil
 }

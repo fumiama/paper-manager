@@ -38,6 +38,13 @@ type filelist struct {
 	Per   uint    `json:"percent"`
 }
 
+type filestatus struct {
+	Name         string        `json:"name"`
+	Size         float64       `json:"size"`
+	Questions    []question    `json:"questions"`
+	Duplications []duplication `json:"duplications"` // Duplications length == 10
+}
+
 func init() {
 	apimap["/api/getFileList"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
@@ -186,7 +193,7 @@ func init() {
 			return
 		}
 		go func() {
-			_, err = global.FileDB.AddFile(id, reg, istemp, func(u uint) { analyzeper.Set(id, u) })
+			err = global.FileDB.AddFile(id, reg, istemp, func(u uint) { analyzeper.Set(id, u) })
 			ch <- struct{}{}
 			close(ch)
 		}()
@@ -283,6 +290,40 @@ func init() {
 			return
 		}
 		writeresult(w, codeError, nil, "parse filepath error", typeError)
+	}}
+	apimap["/api/getFileStatus"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		idstr := r.URL.Query().Get("id")
+		if idstr == "" {
+			writeresult(w, codeError, nil, "empty id", typeError)
+			return
+		}
+		id, err := strconv.Atoi(idstr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		file, sz, err := global.FileDB.GetFile(id, *user.ID)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		qs, ds, err := parseFileQuestions(file.Questions)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, &filestatus{
+			Name:         file.Class + ".docx",
+			Size:         float64(sz) / 1024 / 1024, // MB
+			Questions:    qs,
+			Duplications: ds,
+		}, messageOk, typeSuccess)
 	}}
 }
 
