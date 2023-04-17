@@ -17,7 +17,6 @@ import (
 type QuestionJSON struct {
 	Name   string         `json:"name"`             // Name is name or Question ID
 	Points int            `json:"points,omitempty"` // Points is sum of subs' points or self
-	Rate   float64        `json:"rate,omitempty"`   // Rate is the avg(non-leaf) or max(leaf) similarity
 	Sub    []QuestionJSON `json:"sub,omitempty"`
 }
 
@@ -86,6 +85,43 @@ type Question struct {
 	Images []byte // Images is json of the image dhash in XML, ex. ['rId1': '1234567890abcdef', ...]
 	Vector []byte // Vector is json of {word: freq, ...}
 	Dup    []byte // Dup is json of {queid: rate, ...}
+}
+
+// GetQuestion by id
+func (f *FileDatabase) GetQuestion(id int64, istemp bool) (Question, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	qtable := ""
+	if istemp {
+		qtable = FileTableTempQuestion
+	} else {
+		qtable = FileTableQuestion
+	}
+	return sql.Find[Question](&f.db, qtable, "WHERE ID="+strconv.FormatInt(id, 10))
+}
+
+// GetQuestionHex by hexid
+func (f *FileDatabase) GetQuestionHex(hexid string, istemp bool) (q Question, err error) {
+	idb, err := hex.DecodeString(hexid)
+	if err != nil {
+		return
+	}
+	return f.GetQuestion(int64(binary.LittleEndian.Uint64(idb)), istemp)
+}
+
+// MaxDuplicateRate parse q.Dup and get the max rate
+func (q *Question) MaxDuplicateRate() float64 {
+	dupmap := make(map[string]float64, 64)
+	if err := json.Unmarshal(q.Dup, &dupmap); err != nil {
+		return 0
+	}
+	r := 0.0
+	for _, v := range dupmap {
+		if v > r {
+			r = v
+		}
+	}
+	return r
 }
 
 // GetDuplicateRate calc q & que's dup rate

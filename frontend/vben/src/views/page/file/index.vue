@@ -1,7 +1,9 @@
 <template>
   <PageWrapper :title="t('routes.filelist.file') + ': ' + docxNameRef">
     <template #headerContent>
-      <a-button type="primary" @click="downloadDocx"> 下载试卷 ({{ docxSizeRef }}MB) </a-button>
+      <a-button type="primary" @click="downloadDocx">
+        下载试卷 ({{ docxSizeRef.toFixed(2) }}MB)
+      </a-button>
     </template>
     <div ref="chartRef" :style="{ height, width }"></div>
     <div class="docxWrap" :style="{ width }">
@@ -131,7 +133,7 @@
                   },
                 },
                 {
-                  text: '重复率前十',
+                  text: '重复率: ' + ret.rate.toFixed(2) + '%, 前十如下',
                   left: '40%',
                   top: '1%',
                   textStyle: {

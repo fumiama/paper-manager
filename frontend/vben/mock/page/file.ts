@@ -1,5 +1,5 @@
 import { MockMethod } from 'vite-plugin-mock'
-import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
+// import { resultError, resultSuccess, getRequestToken, requestParams } from '../_util'
 
 export default [
   /*{
@@ -16,7 +16,7 @@ export default [
       })
     },
   },*/
-  {
+  /*{
     url: '/api/getFileStatus',
     timeout: 500,
     method: 'get',
@@ -49,5 +49,5 @@ export default [
         ],
       })
     },
-  },
+  },*/
 ] as MockMethod[]

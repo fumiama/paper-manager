@@ -371,8 +371,10 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 					}
 					v := make(map[string]uint8, len(words)*2)
 					for _, word := range words {
-						if word != "" && word != "\n" && word != " " {
-							v[word]++
+						if word != "" && !strings.Contains("\n 。，、的是使,.（）()1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", word) {
+							if v[word] == 0 { // 二值化
+								v[word] = 1
+							}
 						}
 					}
 					data, err := json.Marshal(v)
@@ -448,9 +450,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 				}
 			}
 			majorq.Sub = append(majorq.Sub, QuestionJSON{
-				Name:   queidstr,
-				Points: 0, //TODO: fill sub points
-				Rate:   r,
+				Name: queidstr, //TODO: fill sub points
 			})
 		}
 		filequestions = append(filequestions, majorq)
@@ -552,18 +552,20 @@ func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 }
 
 // GetFile get analyzed file's structure from List(ID)
-func (f *FileDatabase) GetFile(lstid, uid int) (*File, int64, error) {
+func (f *FileDatabase) GetFile(lstid, uid int) (file *File, sz int64, istemp bool, err error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 	if lst.HasntAnalyzed {
-		return nil, 0, ErrHasntAnalyzed
+		err = ErrHasntAnalyzed
+		return
 	}
 	if lst.IsTemp && lst.Uploader != uid {
-		return nil, 0, ErrNoGetFileStatusPermission
+		err = ErrNoGetFileStatusPermission
+		return
 	}
 	ftable := ""
 	if lst.IsTemp {
@@ -571,9 +573,9 @@ func (f *FileDatabase) GetFile(lstid, uid int) (*File, int64, error) {
 	} else {
 		ftable = FileTableFile
 	}
-	file, err := sql.Find[File](&f.db, ftable, "WHERE ListID="+strconv.Itoa(lstid))
+	filestruct, err := sql.Find[File](&f.db, ftable, "WHERE ListID="+strconv.Itoa(lstid))
 	if err != nil {
-		return nil, 0, err
+		return
 	}
-	return &file, lst.Size, nil
+	return &filestruct, lst.Size, lst.IsTemp, nil
 }

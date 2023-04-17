@@ -16,6 +16,7 @@ export interface Duplication {
 export interface FileStatus {
   name: string
   size: number
+  rate: number
   questions: Question[]
   duplications: Duplication[]
 }

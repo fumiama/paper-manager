@@ -41,6 +41,7 @@ type filelist struct {
 type filestatus struct {
 	Name         string        `json:"name"`
 	Size         float64       `json:"size"`
+	Rate         float64       `json:"rate"`
 	Questions    []question    `json:"questions"`
 	Duplications []duplication `json:"duplications"` // Duplications length == 10
 }
@@ -308,12 +309,12 @@ func init() {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		file, sz, err := global.FileDB.GetFile(id, *user.ID)
+		file, sz, istemp, err := global.FileDB.GetFile(id, *user.ID)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		qs, ds, err := parseFileQuestions(file.Questions)
+		qs, ds, filerate, err := parseFileQuestions(file.Questions, istemp)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
@@ -321,6 +322,7 @@ func init() {
 		writeresult(w, codeSuccess, &filestatus{
 			Name:         file.Class + ".docx",
 			Size:         float64(sz) / 1024 / 1024, // MB
+			Rate:         filerate * 100,
 			Questions:    qs,
 			Duplications: ds,
 		}, messageOk, typeSuccess)
