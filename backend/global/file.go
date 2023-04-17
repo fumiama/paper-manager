@@ -497,7 +497,7 @@ func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 	if err != nil {
 		return err
 	}
-	if !user.IsSuper() {
+	if !user.IsSuper() && !istemp {
 		return ErrInvalidRole
 	}
 	ftable := ""
@@ -511,6 +511,9 @@ func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 	f.mu.RUnlock()
 	if err != nil {
 		return err
+	}
+	if istemp && lst.Uploader != uid {
+		return ErrInvalidRole
 	}
 	if lst.Path == "" || strings.Contains(lst.Path, "..") {
 		return os.ErrNotExist

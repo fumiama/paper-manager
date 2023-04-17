@@ -97,7 +97,9 @@ type loginResult struct {
 }
 
 var (
-	usertokens = ttl.NewCache[string, *global.User](time.Hour)
+	usertokens = ttl.NewCacheOn(time.Hour, [4]func(string, *global.User){
+		nil, nil, func(t string, _ *global.User) { loginstatus.Delete(t) }, nil,
+	})
 )
 
 func login(username, challenge string) (*loginResult, error) {

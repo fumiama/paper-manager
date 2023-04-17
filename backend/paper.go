@@ -54,6 +54,7 @@ func init() {
 			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
 			return
 		}
+		istemp := r.URL.Query().Get("permanent") != "true"
 		count := -1
 		var err error
 		countstr := r.URL.Query().Get("count")
@@ -64,7 +65,7 @@ func init() {
 				return
 			}
 		}
-		lst, err := global.FileDB.ListUploadedFile()
+		lst, err := global.FileDB.ListUploadedFile(istemp)
 		if err != nil && err != sql.ErrNullResult {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
@@ -112,7 +113,7 @@ func init() {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		lst, err := global.FileDB.GetFileInfo(id)
+		lst, err := global.FileDB.ListFileByID(id)
 		if err != nil && err != sql.ErrNullResult {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
@@ -217,7 +218,8 @@ func init() {
 			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
 			return
 		}
-		if !user.IsSuper() {
+		istemp := r.URL.Query().Get("permanent") != "true"
+		if !user.IsSuper() && !istemp {
 			writeresult(w, codeError, nil, errNoDeletePermission.Error(), typeError)
 			return
 		}
@@ -231,7 +233,7 @@ func init() {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		err = global.FileDB.DelFile(id, *user.ID, false)
+		err = global.FileDB.DelFile(id, *user.ID, istemp)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
@@ -245,10 +247,6 @@ func init() {
 			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
 			return
 		}
-		if !user.IsSuper() {
-			writeresult(w, codeError, nil, errNoDeletePermission.Error(), typeError)
-			return
-		}
 		idstr := r.URL.Query().Get("id")
 		if idstr == "" {
 			writeresult(w, codeError, nil, "empty id", typeError)
@@ -259,7 +257,7 @@ func init() {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		lst, err := global.FileDB.GetFileInfo(id)
+		lst, err := global.FileDB.ListFileByID(id)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return

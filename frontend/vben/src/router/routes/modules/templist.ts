@@ -2,34 +2,34 @@ import type { AppRouteModule } from '/@/router/types'
 import { LAYOUT } from '/@/router/constant'
 import { t } from '/@/hooks/web/useI18n'
 
-const filelist: AppRouteModule = {
-  path: '/filelist',
-  name: 'FileList',
+const templist: AppRouteModule = {
+  path: '/templist',
+  name: 'TempList',
   component: LAYOUT,
-  redirect: '/filelist/index',
+  redirect: '/templist/index',
   meta: {
     hideChildrenInMenu: true,
-    icon: 'ion:file-tray-full-outline',
-    title: t('routes.filelist.name'),
+    icon: 'ion:ios-analytics',
+    title: t('routes.templist.name'),
     orderNo: 20,
   },
   children: [
     {
       path: 'index',
-      name: 'FileListPage',
-      component: () => import('/@/views/page/filelist/index.vue'),
+      name: 'TempListPage',
+      component: () => import('/@/views/page/templist/index.vue'),
       meta: {
-        title: t('routes.filelist.name'),
+        title: t('routes.templist.name'),
         icon: 'ion:file-tray-full-outline',
         hideMenu: true,
       },
     },
     {
       path: 'file/:id',
-      name: 'FilePage',
+      name: 'TempFilePage',
       component: () => import('/@/views/page/file/index.vue'),
       meta: {
-        title: t('routes.filelist.file'),
+        title: t('routes.templist.file'),
         carryParam: true,
         icon: 'bi:filetype-docx',
         hideMenu: true,
@@ -38,4 +38,4 @@ const filelist: AppRouteModule = {
   ],
 }
 
-export default filelist
+export default templist

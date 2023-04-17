@@ -34,7 +34,7 @@ export function getListOfPage(pageSize: number, page: number): any[] {
 
 async function refreshFileList() {
   const __cardList: any[] = []
-  const lst = (await getFileList(true)) as getFileListModel
+  const lst = (await getFileList(false)) as getFileListModel
   let __totalSize = 0
   let __totalQuestions = 0
   for (let i = 0; i < lst.length; i++) {

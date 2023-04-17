@@ -15,8 +15,8 @@ enum Api {
 /**
  * @description: Get file list
  */
-export const getFileList = (count?: number) => {
-  return defHttp.get<getFileListModel>({ url: Api.GetFileList, params: { count: count } })
+export const getFileList = (permanent: boolean, count?: number) => {
+  return defHttp.get<getFileListModel>({ url: Api.GetFileList, params: { count, permanent } })
 }
 
 /**
@@ -36,8 +36,8 @@ export const getFilePercent = (id: number) => {
 /**
  * @description: Get file percent
  */
-export const delFile = (id: number) => {
-  return defHttp.get<string>({ url: Api.DelFile, params: { id: id } })
+export const delFile = (id: number, permanent: boolean) => {
+  return defHttp.get<string>({ url: Api.DelFile, params: { id, permanent } })
 }
 
 /**

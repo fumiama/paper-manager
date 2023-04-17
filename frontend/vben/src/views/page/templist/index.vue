@@ -1,5 +1,5 @@
 <template>
-  <PageWrapper :class="prefixCls" :title="t('routes.filelist.name')">
+  <PageWrapper :class="prefixCls" :title="t('routes.templist.name')">
     <template #headerContent>
       <BasicUpload
         name="paper"
@@ -52,7 +52,6 @@
                   &nbsp;&nbsp;
                   <a-button
                     color="warning"
-                    v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
                     :disabled="item.percent != 0"
                     @click="analyzeFile(item)"
                   >
@@ -61,7 +60,6 @@
                   &nbsp;&nbsp;
                   <a-button
                     color="error"
-                    v-if="hasPermission([RoleEnum.SUPER])"
                     :disabled="item.percent > 0 && item.percent < 100"
                     :loading="item.delloading"
                     @click="deleteFile(item)"
@@ -128,7 +126,7 @@
   async function deleteFile(item: any) {
     try {
       item.delloading = true
-      const msg = await delFile(item.id, true)
+      const msg = await delFile(item.id, false)
       if (msg) {
         createMessage.success(msg)
         setTimeout(() => {
@@ -146,7 +144,7 @@
 
   async function analFile(item: any) {
     try {
-      const msg = await analyzeFile(item.id, true)
+      const msg = await analyzeFile(item.id, false)
       if (msg) {
         createMessage.success(msg.msg)
         if (msg.code == 0) {
@@ -181,7 +179,7 @@
       const go = useGo()
 
       function openFile(id: number) {
-        go({ name: 'FilePage', params: { id } })
+        go({ name: 'TempFilePage', params: { id } })
       }
 
       async function onChange(_: number[]) {
