@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+
+	sql "github.com/FloatTech/sqlite"
 )
 
 // Regex stores user's config of splitting docx file
@@ -73,10 +75,16 @@ func (u *UserDatabase) GetUserRegex(id int) (*Regex, error) {
 	if !user.IsFileManager() {
 		return nil, ErrInvalidRole
 	}
-	reg := newRegex()
 	u.mu.RLock()
-	_ = u.db.Find(UserTableRegex, &reg, "WHERE ID="+strconv.Itoa(id))
+	reg, _ := sql.Find[Regex](&u.db, UserTableRegex, "WHERE ID="+strconv.Itoa(id))
 	u.mu.RUnlock()
 	reg.ID = *user.ID
+	rf := reflect.ValueOf(reg)
+	defaultrf := reflect.ValueOf(newRegex())
+	for i := 0; i < rf.NumField(); i++ {
+		if rf.Field(i).IsZero() {
+			rf.Field(i).Set(defaultrf.Field(i))
+		}
+	}
 	return &reg, nil
 }
