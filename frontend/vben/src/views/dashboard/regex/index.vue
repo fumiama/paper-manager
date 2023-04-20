@@ -1,6 +1,6 @@
 <template>
   <PageWrapper
-    title="基础表单"
+    :title="t('routes.dashboard.regex')"
     contentBackground
     content=" 表单页用于向用户收集或验证信息，基础表单常见于数据项较少的表单场景。"
     contentClass="p-4"
@@ -14,11 +14,13 @@
   import { schemas } from './data'
   import { useMessage } from '/@/hooks/web/useMessage'
   import { PageWrapper } from '/@/components/Page'
+  import { useI18n } from '/@/hooks/web/useI18n'
 
   export default defineComponent({
     name: 'FormBasicPage',
     components: { BasicForm, PageWrapper },
     setup() {
+      const { t } = useI18n()
       const { createMessage } = useMessage()
       const [register, { validate, setProps }] = useForm({
         labelCol: {
@@ -57,7 +59,7 @@
         } catch (error) {}
       }
 
-      return { register }
+      return { t, register }
     },
   })
 </script>

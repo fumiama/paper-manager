@@ -21,7 +21,7 @@ type Regex struct {
 	Sub    string // Sub default `(\d+)、`
 }
 
-func newRegex() (reg Regex) {
+func GetDefaultRegex() (reg Regex) {
 	reg.Title = `.*(\d{4})\s*-.*学年.*(\d).*([中末]).*([AB])\s*卷`
 	reg.Class = `(考试科目|课程名称)：\s*(\S+)\s*`
 	reg.OpenCl = `考试形式：\s*(\S+)\s*`
@@ -52,7 +52,7 @@ func (u *UserDatabase) SetUserRegex(id int, name, re string) error {
 	if err != nil {
 		return err
 	}
-	reg := newRegex()
+	reg := GetDefaultRegex()
 	rreg := reflect.ValueOf(&reg).Elem()
 	f := rreg.FieldByName(name)
 	if !f.IsValid() {
@@ -80,7 +80,7 @@ func (u *UserDatabase) GetUserRegex(id int) (*Regex, error) {
 	u.mu.RUnlock()
 	reg.ID = *user.ID
 	rf := reflect.ValueOf(reg)
-	defaultrf := reflect.ValueOf(newRegex())
+	defaultrf := reflect.ValueOf(GetDefaultRegex())
 	for i := 0; i < rf.NumField(); i++ {
 		if rf.Field(i).IsZero() {
 			rf.Field(i).Set(defaultrf.Field(i))

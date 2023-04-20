@@ -4,4 +4,5 @@ export default {
   workbench: '工作台',
   analysis: '分析页',
   account: '用户管理',
+  regex: '试卷解析配置',
 }

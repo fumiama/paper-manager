@@ -43,6 +43,15 @@ const dashboard: AppRouteModule = {
         roles: [RoleEnum.SUPER],
       },
     },
+    {
+      path: 'regex',
+      name: 'Regex',
+      component: () => import('/@/views/dashboard/regex/index.vue'),
+      meta: {
+        // affix: true,
+        title: t('routes.dashboard.regex'),
+      },
+    },
   ],
 }
 

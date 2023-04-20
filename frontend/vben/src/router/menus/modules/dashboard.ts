@@ -19,6 +19,10 @@ const menu: MenuModule = {
         path: 'account',
         name: t('routes.dashboard.account'),
       },
+      {
+        path: 'regex',
+        name: t('routes.dashboard.regex'),
+      },
     ],
   },
 }

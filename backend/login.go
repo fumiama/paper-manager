@@ -98,7 +98,7 @@ type loginResult struct {
 
 var (
 	usertokens = ttl.NewCacheOn(time.Hour, [4]func(string, *global.User){
-		nil, nil, func(t string, _ *global.User) { loginstatus.Delete(t) }, nil,
+		nil, nil, func(_ string, user *global.User) { loginstatus.Delete(user.Name) }, nil,
 	})
 )
 

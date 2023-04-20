@@ -1,6 +1,6 @@
 import { FormSchema } from '/@/components/Form'
 const colProps = {
-  span: 8,
+  span: 24,
 }
 
 export const schemas: FormSchema[] = [
@@ -8,80 +8,56 @@ export const schemas: FormSchema[] = [
     field: 'title',
     component: 'Input',
     colProps,
-    label: '标题',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '试卷标题',
+    defaultValue: 'more 吗',
   },
   {
     field: 'class',
     component: 'Input',
     colProps,
-    label: '客户',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '课程名称',
+    defaultValue: 'more 吗',
   },
   {
     field: 'opencl',
     component: 'Input',
     colProps,
-    label: '客户',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '开/闭卷',
+    defaultValue: 'more 吗',
   },
   {
     field: 'date',
     component: 'Input',
     colProps,
-    label: '客户',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '考试日期',
+    defaultValue: 'more 吗',
   },
   {
     field: 'time',
     component: 'Input',
     colProps,
-    label: '客户',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '考试时长',
+    defaultValue: 'more 吗',
   },
   {
     field: 'rate',
     component: 'Input',
     colProps,
-    label: '客户',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '成绩占比',
+    defaultValue: 'more 吗',
   },
   {
     field: 'major',
     component: 'Input',
     colProps,
-    label: '客户',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '大题题号',
+    defaultValue: 'more 吗',
   },
   {
     field: 'sub',
     component: 'Input',
     colProps,
-    label: '客户',
-    helpMessage: '目标的服务对象',
-    componentProps: {
-      placeholder: '请描述你服务的客户，内部客户直接 @姓名／工号',
-    },
+    label: '小题题号',
+    defaultValue: 'more 吗',
   },
 ]
