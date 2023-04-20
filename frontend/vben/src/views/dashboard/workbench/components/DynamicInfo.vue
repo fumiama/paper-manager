@@ -36,7 +36,7 @@
   import { Card, List } from 'ant-design-vue'
   import { getMessageList, acceptMessage, deleteMessage } from '/@/api/dashboard/index'
   import { useMessage } from '/@/hooks/web/useMessage'
-  import { MessageTypeEnum, MessageItem } from '/@/api/dashboard/model/workbenchModel'
+  import { MessageTypeEnum, MessageItem } from '../../../../api/dashboard/model/model.js'
   import { Avatar } from 'ant-design-vue'
   import headerImg from '/@/assets/images/header.jpg'
 

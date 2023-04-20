@@ -79,9 +79,9 @@ func (u *UserDatabase) GetUserRegex(id int) (*Regex, error) {
 	reg, _ := sql.Find[Regex](&u.db, UserTableRegex, "WHERE ID="+strconv.Itoa(id))
 	u.mu.RUnlock()
 	reg.ID = *user.ID
-	rf := reflect.ValueOf(reg)
+	rf := reflect.ValueOf(&reg).Elem()
 	defaultrf := reflect.ValueOf(GetDefaultRegex())
-	for i := 0; i < rf.NumField(); i++ {
+	for i := 1; i < rf.NumField(); i++ {
 		if rf.Field(i).IsZero() {
 			rf.Field(i).Set(defaultrf.Field(i))
 		}

@@ -1,7 +1,10 @@
 import { FormSchema } from '/@/components/Form'
+import { getUserRegex } from '/@/api/dashboard'
 const colProps = {
   span: 24,
 }
+
+const userregex = await getUserRegex()
 
 export const schemas: FormSchema[] = [
   {
@@ -9,55 +12,55 @@ export const schemas: FormSchema[] = [
     component: 'Input',
     colProps,
     label: '试卷标题',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.Title,
   },
   {
     field: 'class',
     component: 'Input',
     colProps,
     label: '课程名称',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.Class,
   },
   {
     field: 'opencl',
     component: 'Input',
     colProps,
     label: '开/闭卷',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.OpenCl,
   },
   {
     field: 'date',
     component: 'Input',
     colProps,
     label: '考试日期',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.Date,
   },
   {
     field: 'time',
     component: 'Input',
     colProps,
     label: '考试时长',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.Time,
   },
   {
     field: 'rate',
     component: 'Input',
     colProps,
     label: '成绩占比',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.Rate,
   },
   {
     field: 'major',
     component: 'Input',
     colProps,
     label: '大题题号',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.Major,
   },
   {
     field: 'sub',
     component: 'Input',
     colProps,
     label: '小题题号',
-    defaultValue: 'more 吗',
+    defaultValue: userregex.Sub,
   },
 ]

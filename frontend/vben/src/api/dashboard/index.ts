@@ -1,11 +1,12 @@
 import { defHttp } from '/@/utils/http/axios'
-import { MessageItem } from './model/workbenchModel'
+import { MessageItem, UserRegex } from './model/model'
 
 enum Api {
   GetMessageList = '/getMessageList',
   AcceptMessage = '/acceptMessage',
   DeleteMessage = '/delMessage',
   GetAnnualVisits = '/getAnnualVisits',
+  GetUserRegex = '/getUserRegex',
 }
 
 export const getAnnualVisits = () => {
@@ -22,4 +23,8 @@ export const acceptMessage = (id: number) => {
 
 export const deleteMessage = (id: number) => {
   return defHttp.get<string>({ url: Api.DeleteMessage, params: { id } })
+}
+
+export const getUserRegex = () => {
+  return defHttp.get<UserRegex>({ url: Api.GetUserRegex })
 }

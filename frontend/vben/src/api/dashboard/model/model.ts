@@ -15,3 +15,15 @@ export interface MessageItem {
   text: string
   type: MessageTypeEnum
 }
+
+export interface UserRegex {
+  ID: number
+  Title: string
+  Class: string
+  OpenCl: string
+  Date: string
+  Time: string
+  Rate: string
+  Major: string
+  Sub: string
+}
