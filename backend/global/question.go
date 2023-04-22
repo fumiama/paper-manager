@@ -81,6 +81,7 @@ func (f *FileDatabase) DelQuestion(id int64, istemp bool) error {
 type Question struct {
 	ID     int64  // ID is the first 8 bytes of the Plain's md5
 	FileID int64  // FileID is fk to File(ID)
+	Major  string // Major is sub's major name
 	Path   string // Path is the question's docx position
 	Plain  string // Plain is the plain text of the question (like markdown format)
 	Images []byte // Images is json of the image dhash in XML, ex. ['rId1': '1234567890abcdef', ...]
@@ -108,6 +109,21 @@ func (f *FileDatabase) GetQuestionHex(hexid string, istemp bool) (q Question, er
 		return
 	}
 	return f.GetQuestion(int64(binary.LittleEndian.Uint64(idb)), istemp)
+}
+
+// GetMajors ...
+func (f *FileDatabase) GetMajors() (majors []string) {
+	type majorq struct {
+		Major string
+	}
+	var maj majorq
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	f.db.QueryFor("SELECT DISTINCT Major FROM question;", &maj, func() error {
+		majors = append(majors, maj.Major)
+		return nil
+	})
+	return
 }
 
 // MaxDuplicateRate parse q.Dup and get the max rate

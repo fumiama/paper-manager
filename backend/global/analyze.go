@@ -236,6 +236,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 			que := &Question{
 				ID:     int64(binary.LittleEndian.Uint64(m[:8])),
 				FileID: file.ID,
+				Major:  majorq.Name,
 				Plain:  base14.BytesToString(sb.Bytes()),
 				Images: func() []byte {
 					m := make(map[string]string)
