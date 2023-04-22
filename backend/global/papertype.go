@@ -79,7 +79,7 @@ func (pt PaperType) OpenClose() string {
 		return "开卷"
 	case 2:
 		return "一页纸开卷"
-	case 3:
+	case 4:
 		return "闭卷"
 	default:
 		return "闭卷"
@@ -94,7 +94,7 @@ func (pt PaperType) SetOpenClose(x string) PaperType {
 	case "一页纸开卷":
 		n = 2 << 12
 	case "闭卷":
-		n = 3 << 12
+		n = 4 << 12
 	}
 	return pt | n
 }

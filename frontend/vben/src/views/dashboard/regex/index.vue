@@ -25,15 +25,15 @@
       const { createMessage } = useMessage()
       const [register, { validate, setProps }] = useForm({
         labelCol: {
-          span: 8,
+          span: 5,
         },
         wrapperCol: {
-          span: 15,
+          span: 16,
         },
         schemas: schemas,
         actionColOptions: {
-          offset: 8,
-          span: 23,
+          offset: 3,
+          span: 16,
         },
         submitButtonOptions: {
           text: '提交',

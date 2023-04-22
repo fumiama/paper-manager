@@ -1,15 +1,15 @@
 import type { MenuModule } from '/@/router/types'
 import { t } from '/@/hooks/web/useI18n'
 const menu: MenuModule = {
-  orderNo: 30,
+  orderNo: 40,
   menu: {
-    name: t('routes.templist.name'),
-    path: '/templist',
+    name: t('routes.genfile.name'),
+    path: '/genfile',
 
     children: [
       {
         path: 'index',
-        name: t('routes.templist.name'),
+        name: t('routes.genfile.name'),
       },
     ],
   },

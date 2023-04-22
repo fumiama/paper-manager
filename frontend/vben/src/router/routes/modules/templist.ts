@@ -11,7 +11,7 @@ const templist: AppRouteModule = {
     hideChildrenInMenu: true,
     icon: 'ion:ios-analytics',
     title: t('routes.templist.name'),
-    orderNo: 20,
+    orderNo: 30,
   },
   children: [
     {
