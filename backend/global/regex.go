@@ -34,36 +34,32 @@ func GetDefaultRegex() (reg Regex) {
 }
 
 // SetUserRegex set Regex.name = re
-func (u *UserDatabase) SetUserRegex(id int, name, re string) error {
-	if name == "" || name == "ID" {
-		return ErrInvalidFieldName
-	}
-	if re == "" {
+func (u *UserDatabase) SetUserRegex(id int, reg *Regex) error {
+	if reg == nil {
 		return ErrEmptyRegex
 	}
 	user, err := UserDB.GetUserByID(id)
 	if err != nil {
 		return err
 	}
-	if !user.IsFileManager() {
+	if !user.IsSuper() && id != *user.ID {
 		return ErrInvalidRole
 	}
-	_, err = regexp.Compile(re)
-	if err != nil {
-		return err
-	}
-	reg := GetDefaultRegex()
-	rreg := reflect.ValueOf(&reg).Elem()
-	f := rreg.FieldByName(name)
-	if !f.IsValid() {
-		return ErrNoSuchFieldName
+	defaultrf := reflect.ValueOf(GetDefaultRegex())
+	rreg := reflect.ValueOf(reg).Elem()
+	for i := 1; i < rreg.NumField(); i++ {
+		if rreg.Field(i).Equal(defaultrf.Field(i)) {
+			rreg.Field(i).SetString("")
+		} else {
+			_, err = regexp.Compile(rreg.Field(i).String())
+			if err != nil {
+				return err
+			}
+		}
 	}
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	_ = u.db.Find(UserTableRegex, &reg, "WHERE ID="+strconv.Itoa(id))
-	reg.ID = id
-	f.SetString(re)
-	return u.db.Insert(UserTableRegex, &reg)
+	return u.db.Insert(UserTableRegex, reg)
 }
 
 // GetUserRegex default newRegex()
@@ -72,7 +68,7 @@ func (u *UserDatabase) GetUserRegex(id int) (*Regex, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !user.IsFileManager() {
+	if !user.IsSuper() || id != *user.ID {
 		return nil, ErrInvalidRole
 	}
 	u.mu.RLock()

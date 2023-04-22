@@ -30,7 +30,6 @@ var (
 	ErrUsernameExists    = errors.New("username exists")
 	ErrInvalidName       = errors.New("invalid name")
 	ErrInvalidContact    = errors.New("invalid contact")
-	ErrInvalidFieldName  = errors.New("invalid field name")
 	ErrNoSuchFieldName   = errors.New("no such field name")
 	ErrEmptyRegex        = errors.New("empty regex")
 )

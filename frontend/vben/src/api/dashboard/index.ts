@@ -7,6 +7,7 @@ enum Api {
   DeleteMessage = '/delMessage',
   GetAnnualVisits = '/getAnnualVisits',
   GetUserRegex = '/getUserRegex',
+  SetUserRegex = '/setUserRegex',
 }
 
 export const getAnnualVisits = () => {
@@ -27,4 +28,8 @@ export const deleteMessage = (id: number) => {
 
 export const getUserRegex = () => {
   return defHttp.get<UserRegex>({ url: Api.GetUserRegex })
+}
+
+export const setUserRegex = (params: UserRegex) => {
+  return defHttp.post<string>({ url: Api.SetUserRegex, params })
 }

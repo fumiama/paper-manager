@@ -2,7 +2,7 @@
   <PageWrapper
     :title="t('routes.dashboard.regex')"
     contentBackground
-    content=" 表单页用于向用户收集或验证信息，基础表单常见于数据项较少的表单场景。"
+    content="设置试卷解析/查重时使用的正则表达式"
     contentClass="p-4"
   >
     <BasicForm @register="register" />
@@ -15,6 +15,7 @@
   import { useMessage } from '/@/hooks/web/useMessage'
   import { PageWrapper } from '/@/components/Page'
   import { useI18n } from '/@/hooks/web/useI18n'
+  import { setUserRegex } from '/@/api/dashboard'
 
   export default defineComponent({
     name: 'FormBasicPage',
@@ -42,20 +43,20 @@
 
       async function customSubmitFunc() {
         try {
-          await validate()
+          const data = await validate()
+          if (!data) return
           setProps({
             submitButtonOptions: {
               loading: true,
             },
           })
-          setTimeout(() => {
-            setProps({
-              submitButtonOptions: {
-                loading: false,
-              },
-            })
-            createMessage.success('提交成功！')
-          }, 2000)
+          const msg = await setUserRegex(data)
+          setProps({
+            submitButtonOptions: {
+              loading: false,
+            },
+          })
+          createMessage.success(msg)
         } catch (error) {}
       }
 
