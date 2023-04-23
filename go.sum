@@ -13,8 +13,8 @@ github.com/fumiama/bigfft v0.0.0-20211011143303-6e0bfa3c836b h1:Zt3pFQditAdWTHCO
 github.com/fumiama/bigfft v0.0.0-20211011143303-6e0bfa3c836b/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/fumiama/go-base16384 v1.6.4 h1:rYDRwD/th2cG4U7QLokpzmST1cCxZGXtHmolOUePt5o=
 github.com/fumiama/go-base16384 v1.6.4/go.mod h1:OEn+947GV5gsbTAnyuUW/SrfxJYUdYupSIQXOuGOcXM=
-github.com/fumiama/go-docx v0.0.0-20230330141738-34f53a967c03 h1:gQ9cMYk9QhTXh5sx74RwuNoDzJqVLYfOBsl/0rMMDns=
-github.com/fumiama/go-docx v0.0.0-20230330141738-34f53a967c03/go.mod h1:ssRF0IaB1hCcKIObp3FkZOsjTcAHpgii70JelNb4H8M=
+github.com/fumiama/go-docx v0.0.0-20230423112805-050781fdde57 h1:9ihi8RbNyKHf1gThoeRyD2SYdbPLkLiql9N+kzljoWY=
+github.com/fumiama/go-docx v0.0.0-20230423112805-050781fdde57/go.mod h1:ssRF0IaB1hCcKIObp3FkZOsjTcAHpgii70JelNb4H8M=
 github.com/fumiama/imgsz v0.0.2 h1:fAkC0FnIscdKOXwAxlyw3EUba5NzxZdSxGaq3Uyfxak=
 github.com/fumiama/imgsz v0.0.2/go.mod h1:dR71mI3I2O5u6+PCpd47M9TZptzP+39tRBcbdIkoqM4=
 github.com/fumiama/jieba v0.0.0-20221203025406-36c17a10b565 h1:sQuR2+N5HurnvsZhiKdEg+Ig354TaqgCQRxd/0KgIOQ=

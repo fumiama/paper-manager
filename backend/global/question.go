@@ -80,7 +80,7 @@ func (f *FileDatabase) DelQuestion(id int64, istemp bool) error {
 
 type Question struct {
 	ID     int64  // ID is the first 8 bytes of the Plain's md5
-	FileID int64  // FileID is fk to File(ID)
+	ListID int    // ListID is fk to List(ID)
 	Major  string // Major is sub's major name
 	Path   string // Path is the question's docx position
 	Plain  string // Plain is the plain text of the question (like markdown format)

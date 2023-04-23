@@ -2,6 +2,7 @@ package global
 
 import (
 	"errors"
+	"os"
 	"strconv"
 
 	sql "github.com/FloatTech/sqlite"
@@ -77,7 +78,26 @@ func (f *FileDatabase) GenerateFile(config *GenerateConfig) (*docx.Docx, error) 
 		if rate > config.RateLimit {
 			return nil, ErrRateLimitExceeded
 		}
-		// TODO: 写入question到docf
+		for i, q := range ques {
+			lst, err := sql.Find[List](&f.db, FileTableFile, "WHERE ID="+strconv.Itoa(q.ListID))
+			if err != nil {
+				return nil, err
+			}
+			quesfile, err := os.Open(q.Path)
+			if err != nil {
+				return nil, err
+			}
+			stat, err := quesfile.Stat()
+			if err != nil {
+				return nil, err
+			}
+			docq, err := docx.Parse(quesfile, stat.Size())
+			if err != nil {
+				return nil, err
+			}
+			docf.AddParagraph().AddText(strconv.Itoa(i+1) + ". (" + lst.Desc + ")")
+			docf.AppendFile(docq)
+		}
 	}
-	return nil, nil
+	return docf, nil
 }

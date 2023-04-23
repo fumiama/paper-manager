@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"encoding/json"
 	"math"
+	"net/http"
 	"strconv"
 
 	"github.com/fumiama/paper-manager/backend/global"
@@ -94,4 +95,23 @@ func parseFileQuestions(qb []byte, istemp bool) ([]question, []duplication, floa
 	}
 
 	return qs, ds, sum / float64(cnt), nil
+}
+
+func init() {
+	apimap["/api/getMajors"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		user := usertokens.Get(r.Header.Get("Authorization"))
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		majs := global.FileDB.GetMajors()
+		type majret struct {
+			Name string
+		}
+		majrets := make([]majret, len(majs))
+		for i, s := range majs {
+			majrets[i].Name = s
+		}
+		writeresult(w, codeSuccess, &majrets, messageOk, typeSuccess)
+	}}
 }

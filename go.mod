@@ -8,7 +8,7 @@ require (
 	github.com/RomiChan/syncx v0.0.0-20221202055724-5f842c53020e
 	github.com/corona10/goimagehash v1.1.0
 	github.com/fumiama/go-base16384 v1.6.4
-	github.com/fumiama/go-docx v0.0.0-20230330141738-34f53a967c03
+	github.com/fumiama/go-docx v0.0.0-20230423112805-050781fdde57
 	github.com/fumiama/imgsz v0.0.2
 	github.com/fumiama/jieba v0.0.0-20221203025406-36c17a10b565
 	github.com/sirupsen/logrus v1.9.0

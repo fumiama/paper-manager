@@ -10,6 +10,7 @@ enum Api {
   AnalyzeFile = '/analyzeFile',
   DlFile = '/dlFile',
   GetFileStatus = '/getFileStatus',
+  GetMajors = '/getMajors',
 }
 
 /**
@@ -72,4 +73,11 @@ export const getFileBlob = (url: string) => {
  */
 export const getFileStatus = (id: number) => {
   return defHttp.get<FileStatus>({ url: Api.GetFileStatus, params: { id: id } })
+}
+
+/**
+ * @description: Get majors
+ */
+export const getMajors = () => {
+  return defHttp.get<string[]>({ url: Api.GetMajors })
 }
