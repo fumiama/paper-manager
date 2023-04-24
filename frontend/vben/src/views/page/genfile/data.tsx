@@ -1,4 +1,12 @@
 import { FormSchema } from '/@/components/Form'
+import { reactive } from 'vue'
+
+export const state = reactive({
+  initSetp2: false,
+  initSetp3: false,
+  step1Values: { values: {} as any, data: [] as Recordable<any>[] },
+  step2Values: {} as any,
+})
 
 export const step1Schemas: FormSchema[] = [
   {
@@ -116,19 +124,6 @@ export const step1Schemas: FormSchema[] = [
     },
     colProps: {
       span: 20,
-    },
-  },
-]
-
-export const step2Schemas: FormSchema[] = [
-  {
-    field: 'pwd',
-    component: 'InputPassword',
-    label: '支付密码',
-    required: true,
-    defaultValue: '123456',
-    colProps: {
-      span: 24,
     },
   },
 ]

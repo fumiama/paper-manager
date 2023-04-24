@@ -1,5 +1,10 @@
 import { defHttp, paperHttp } from '/@/utils/http/axios'
-import { getFileListModel, AnalyzeFile, FileListGroupItem } from './model/fileListModel'
+import {
+  getFileListModel,
+  AnalyzeFile,
+  FileListGroupItem,
+  GenerateConfig,
+} from './model/fileListModel'
 import { DownloadFile, FileStatus } from './model/fileModel'
 
 enum Api {
@@ -11,6 +16,8 @@ enum Api {
   DlFile = '/dlFile',
   GetFileStatus = '/getFileStatus',
   GetMajors = '/getMajors',
+  GenFile = '/genFile',
+  DlGen = '/dlGen',
 }
 
 /**
@@ -80,4 +87,21 @@ export const getFileStatus = (id: number) => {
  */
 export const getMajors = () => {
   return defHttp.get<string[]>({ url: Api.GetMajors })
+}
+
+/**
+ * @description: Generate File
+ */
+export const generateFile = (config: GenerateConfig) => {
+  return defHttp.post<string>({ url: Api.GenFile, params: config }, { errorMessageMode: 'none' })
+}
+
+/**
+ * @description: Download generated file
+ */
+export const dlGeneratedFile = () => {
+  return paperHttp.get<any>(
+    { url: '/api' + Api.DlGen, responseType: 'blob' },
+    { errorMessageMode: 'none' },
+  )
 }

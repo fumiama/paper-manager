@@ -1,15 +1,15 @@
 <template>
   <PageWrapper
-    title="分步表单"
+    :title="t('routes.genfile.name')"
     contentBackground
-    content=" 将一个冗长或用户不熟悉的表单任务分成多个步骤，指导用户完成。"
+    content="使用自定义限制条件生成试卷"
     contentClass="p-4"
   >
     <div class="step-form-form">
       <a-steps :current="current">
-        <a-step title="填写转账信息" />
-        <a-step title="确认转账信息" />
-        <a-step title="完成" />
+        <a-step title="填写信息" />
+        <a-step title="确认生成" />
+        <a-step title="下载" />
       </a-steps>
     </div>
     <div class="mt-5">
@@ -25,12 +25,14 @@
   </PageWrapper>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, reactive, toRefs } from 'vue'
+  import { defineComponent, ref, toRefs } from 'vue'
+  import { state } from './data'
   import Step1 from './Step1.vue'
   import Step2 from './Step2.vue'
   import Step3 from './Step3.vue'
   import { PageWrapper } from '/@/components/Page'
   import { Steps } from 'ant-design-vue'
+  import { useI18n } from '/@/hooks/web/useI18n'
 
   export default defineComponent({
     name: 'FormStepPage',
@@ -45,15 +47,12 @@
     setup() {
       const current = ref(0)
 
-      const state = reactive({
-        initSetp2: false,
-        initSetp3: false,
-      })
+      const { t } = useI18n()
 
       function handleStep1Next(step1Values: any) {
         current.value++
         state.initSetp2 = true
-        console.log(step1Values)
+        state.step1Values = step1Values
       }
 
       function handleStepPrev() {
@@ -63,7 +62,7 @@
       function handleStep2Next(step2Values: any) {
         current.value++
         state.initSetp3 = true
-        console.log(step2Values)
+        state.step2Values = step2Values
       }
 
       function handleRedo() {
@@ -73,6 +72,7 @@
       }
 
       return {
+        t,
         current,
         handleStep1Next,
         handleStep2Next,

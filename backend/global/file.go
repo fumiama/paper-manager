@@ -53,7 +53,7 @@ func init() {
 		panic(err)
 	}
 	err = FileDB.db.Create(FileTableQuestion, &Question{},
-		"FOREIGN KEY(FileID) REFERENCES "+FileTableFile+"(ID)",
+		"FOREIGN KEY(ListID) REFERENCES "+FileTableList+"(ID)",
 	)
 	if err != nil {
 		panic(err)

@@ -95,7 +95,12 @@
       async function customSubmitFunc() {
         try {
           const values = await validate()
-          emit('next', values)
+          const data = getDataSource()
+          if (data.length == 0) {
+            createMessage.error('必须指定至少一种题型!')
+            return
+          }
+          emit('next', { values, data })
         } catch (error) {}
       }
 
