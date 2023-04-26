@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/fumiama/paper-manager/backend"
+	"github.com/fumiama/paper-manager/frontend"
 )
 
 func line() int {
@@ -33,6 +34,7 @@ func main() {
 	http.HandleFunc("/file/", backend.FileHandler)
 	http.HandleFunc("/paper/", backend.PaperHandler)
 	http.HandleFunc("/upload", backend.UploadHandler)
+	http.Handle("/", frontend.StaticHandler)
 
 	logrus.Infoln("[http.Serve] start at", l.Addr())
 	logrus.Errorln("[http.Serve]", http.Serve(l, nil))
