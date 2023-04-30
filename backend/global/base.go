@@ -12,8 +12,6 @@ const (
 	DataFolder = "./data/"
 	// FileFolder stores all uploaded blob files
 	FileFolder = DataFolder + "file/"
-	// ImageFolder stores images of questions
-	ImageFolder = DataFolder + "image/"
 	// PaperFolder stores all protected files
 	PaperFolder = DataFolder + "paper/"
 )
@@ -21,7 +19,6 @@ const (
 func init() {
 	initdir(DataFolder)
 	initdir(FileFolder)
-	initsecuredir(ImageFolder)
 	initsecuredir(PaperFolder)
 }
 
