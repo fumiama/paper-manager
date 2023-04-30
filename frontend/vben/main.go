@@ -8,10 +8,6 @@ import (
 	"net/http"
 )
 
-//go:generate npm run build
-
-//go:generate zip -9 -r -D dist.zip dist/* -x "dist/.DS_Store" "dist/*/.DS_Store"
-
 //go:embed dist.zip
 var distzipbytes []byte
 

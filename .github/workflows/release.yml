@@ -39,7 +39,9 @@ jobs:
           npm install pnpm -g
           cd frontend/vben
           pnpm i
-          go generate main.go
+          npm run build
+          ls dist
+          zip -9 -r -D dist.zip dist -x "dist/.DS_Store" "dist/*/.DS_Store"
 
       - name: Build linux-x64
         run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-linux-x64
