@@ -42,24 +42,24 @@ jobs:
           go generate main.go
 
       - name: Build linux-x64
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-x64
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-linux-x64
       - name: Build linux-x86
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-x86
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-linux-x86
 
       - name: Build windows-x64
-        run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o artifacts/paper-manager-windows-x64.exe
+        run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-windows-x64.exe
       - name: Build windows-x86
-        run: CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -ldflags="-s -w" -o artifacts/paper-manager-windows-x86.exe
+        run: CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-windows-x86.exe
 
       - name: Build linux-arm64
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-arm64
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-linux-arm64
       - name: Build linux-armhfv6
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-armhfv6
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-linux-armhfv6
 
       - name: Build darwin-x64
-        run: CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o artifacts/paper-manager-darwin-x64
+        run: CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-darwin-x64
       - name: Build darwin-arm64
-        run: CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o artifacts/paper-manager-darwin-arm64
+        run: CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -trimpath -o artifacts/paper-manager-darwin-arm64
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
