@@ -1,0 +1,65 @@
+name: 发行版
+on:
+  push:
+    tags:
+      - v*
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+
+jobs:
+  my-job:
+    name: Build paper-manager on Push Tag 🚀
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.20'
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Cache Go
+        id: cache
+        uses: actions/cache@v2
+        with:
+          # A list of files, directories, and wildcard patterns to cache and restore
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+
+      - name: Tidy Go modules
+        run: go mod tidy
+
+      - name: Install and build Frontend
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pnpm yarn
+          cd frontend/vben
+          pnpm i
+          go generate main.go
+
+      - name: Build linux-x64
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-x64
+      - name: Build linux-x86
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-x86
+
+      - name: Build windows-x64
+        run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-x64.exe
+      - name: Build windows-x86
+        run: CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-x86.exe
+      
+      - name: Build linux-arm64
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-arm64
+      - name: Build linux-armhfv6
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags="-s -w" -o artifacts/paper-manager-linux-armhfv6
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: artifacts/paper-manager-*
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
