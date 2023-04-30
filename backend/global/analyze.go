@@ -230,7 +230,7 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 		for _, subdoc := range subdocs {
 			sb := bytes.NewBuffer(make([]byte, 0, 4096))
 			for _, it := range subdoc.Document.Body.Items {
-				sb.WriteString(fmt.Sprint(it))
+				sb.WriteString(fmt.Sprintln(it))
 			}
 			m := md5.Sum(sb.Bytes())
 			que := &Question{
