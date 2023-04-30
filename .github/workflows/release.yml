@@ -35,7 +35,7 @@ jobs:
       - name: Install and build Frontend
         run: |
           sudo apt update
-          sudo apt install -y nodejs
+          sudo apt install -y nodejs zip
           npm install pnpm -g
           cd frontend/vben
           pnpm i

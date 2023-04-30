@@ -10,7 +10,7 @@ import (
 
 //go:generate npm run build
 
-//go:generate zip -9 -r -D dist.zip dist/* -x "dist/.DS_Store" "dist/*/.DS_Store"
+//go:generate zip -9 -r dist.zip -x "dist/.DS_Store" "dist/*/.DS_Store" dist/*
 
 //go:embed dist.zip
 var distzipbytes []byte
