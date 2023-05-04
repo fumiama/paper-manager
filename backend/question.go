@@ -50,15 +50,19 @@ func (d *duplications) Pop() any {
 	return x
 }
 
-func parseFileQuestions(qb []byte, istemp bool) ([]question, []duplication, float64, error) {
+func parseFileQuestions(qb []byte, istemp, getdup bool) ([]question, []duplication, float64, error) {
 	ques := make([]global.QuestionJSON, 0, 16)
 	qs := make([]question, 0, 16)
 	err := json.Unmarshal(qb, &ques)
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	dh := make(duplications, 0, 16)
-	heap.Init(&dh)
+	dhp := (*duplications)(nil)
+	if getdup {
+		dh := make(duplications, 0, 16)
+		heap.Init(&dh)
+		dhp = &dh
+	}
 	sum := 0.0
 	cnt := 0
 	for _, q := range ques {
@@ -68,33 +72,63 @@ func parseFileQuestions(qb []byte, istemp bool) ([]question, []duplication, floa
 			Name:  q.Name,
 		})
 		for i, subq := range q.Sub {
-			qstruct, err := global.FileDB.GetQuestionHex(subq.Name, istemp)
+			qstruct, err := global.FileDB.GetQuestionByHex(subq.Name, istemp)
 			if err != nil {
 				continue
 			}
 			p := qstruct.MaxDuplicateRate()
-			heap.Push(&dh, duplication{
-				Percent: int(math.Round(p * 100)),
-				Name:    q.Name + "." + strconv.Itoa(i+1),
-			})
+			if getdup {
+				heap.Push(dhp, duplication{
+					Percent: int(math.Round(p * 100)),
+					Name:    q.Name + "." + strconv.Itoa(i+1),
+				})
+			}
 			sum += p
 			cnt++
 		}
 	}
-	i := dh.Len()
-	ds := make([]duplication, 10)
-	if i > 10 {
-		i = 10
-	} else {
-		for j := i; j < 10; j++ {
-			ds[j] = duplication{Name: "N/A"}
+	if getdup {
+		i := dhp.Len()
+		ds := make([]duplication, 10)
+		if i > 10 {
+			i = 10
+		} else {
+			for j := i; j < 10; j++ {
+				ds[j] = duplication{Name: "N/A"}
+			}
 		}
-	}
-	for i--; i >= 0; i-- {
-		ds[i] = heap.Pop(&dh).(duplication)
+		for i--; i >= 0; i-- {
+			ds[i] = heap.Pop(dhp).(duplication)
+		}
+		return qs, ds, sum / float64(cnt), nil
 	}
 
-	return qs, ds, sum / float64(cnt), nil
+	return qs, nil, sum / float64(cnt), nil
+}
+
+// getQuestionDupFromPaper returns rate, error
+func getQuestionDupFromPaper(que global.QuestionJSON, ques []global.QuestionJSON, istemp bool) (float64, error) {
+	myqstruct, err := global.FileDB.GetQuestionByHex(que.Name, istemp)
+	if err != nil {
+		return -1, err
+	}
+	maxp := 0.0
+	for _, q := range ques {
+		for _, subq := range q.Sub {
+			qstruct, err := global.FileDB.GetQuestionByHex(subq.Name, istemp)
+			if err != nil {
+				continue
+			}
+			p, err := myqstruct.GetDuplicateRate(&qstruct)
+			if err != nil {
+				continue
+			}
+			if maxp < p {
+				maxp = p
+			}
+		}
+	}
+	return maxp, nil
 }
 
 func init() {

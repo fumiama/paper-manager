@@ -5,7 +5,7 @@ import {
   FileListGroupItem,
   GenerateConfig,
 } from './model/fileListModel'
-import { DownloadFile, FileStatus } from './model/fileModel'
+import { DownloadFile, FileDupStatus, FileStatus } from './model/fileModel'
 
 enum Api {
   GetFileList = '/getFileList',
@@ -15,6 +15,7 @@ enum Api {
   AnalyzeFile = '/analyzeFile',
   DlFile = '/dlFile',
   GetFileStatus = '/getFileStatus',
+  CheckFileDup = '/checkFileDup',
   GetMajors = '/getMajors',
   GenFile = '/genFile',
   DlGen = '/dlGen',
@@ -93,6 +94,16 @@ export const getFileBlob = (url: string) => {
  */
 export const getFileStatus = (id: number) => {
   return defHttp.get<FileStatus>({ url: Api.GetFileStatus, params: { id: id } })
+}
+
+/**
+ * @description: Check file duplication
+ */
+export const checkFileDup = (id: number, ys: number, ye: number) => {
+  return defHttp.get<FileDupStatus>(
+    { url: Api.CheckFileDup, params: { id, ys, ye } },
+    { errorMessageMode: 'none' },
+  )
 }
 
 /**

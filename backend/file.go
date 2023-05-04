@@ -1,7 +1,10 @@
 package backend
 
 import (
+	"container/heap"
+	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,8 +34,8 @@ type filelist struct {
 	Per   uint    `json:"percent"`
 }
 
-func getFileList(count int, istemp *bool) ([]filelist, error) {
-	lst, err := global.FileDB.ListUploadedFile(istemp)
+func getFileList(count, uid int, istemp *bool) ([]filelist, error) {
+	lst, err := global.FileDB.ListUploadedFile(istemp, uid)
 	if err != nil && err != sql.ErrNullResult {
 		return nil, err
 	}
@@ -124,20 +127,124 @@ type filestatus struct {
 }
 
 func getFileStatus(lstid int, user *global.User) (*filestatus, error) {
-	file, sz, istemp, err := global.FileDB.GetFile(lstid, *user.ID)
+	file, lst, err := global.FileDB.GetFile(lstid, *user.ID)
 	if err != nil {
 		return nil, err
 	}
-	qs, ds, filerate, err := parseFileQuestions(file.Questions, istemp)
+	qs, ds, filerate, err := parseFileQuestions(file.Questions, lst.IsTemp, true)
 	if err != nil {
 		return nil, err
 	}
 	return &filestatus{
 		Name:         file.Class + ".docx",
-		Size:         float64(sz) / 1024 / 1024, // MB
+		Size:         float64(lst.Size) / 1024 / 1024, // MB
 		Rate:         filerate * 100,
 		Questions:    qs,
 		Duplications: ds,
+	}, nil
+}
+
+type filestatusdup struct {
+	Name         string        `json:"name"`
+	Size         float64       `json:"size"`
+	Rate         int           `json:"rate"`
+	Questions    []question    `json:"questions"`
+	Duplications []duplication `json:"duplications"` // Duplications length == 10
+	Files        []duplication `json:"files"`        // Files is {dup: desc}[] in yearstart..yearend
+}
+
+func checkFileDup(lstid int, user *global.User, yearstart, yearend global.StudyYear) (*filestatusdup, error) {
+	file, lst, err := global.FileDB.GetFile(lstid, *user.ID)
+	if err != nil {
+		return nil, err
+	}
+	files, err := global.FileDB.GetFilesByYearRange(yearstart, yearend)
+	if err != nil {
+		return nil, err
+	}
+	qs := make([]question, 0, 16)
+	filesdups := make([]duplication, 0, 16)
+	ques := make([]global.QuestionJSON, 0, 64)
+	myques := make([]global.QuestionJSON, 0, 64)
+	err = json.Unmarshal(file.Questions, &myques)
+	if err != nil {
+		return nil, err
+	}
+	dh := make(duplications, 0, 16)
+	heap.Init(&dh)
+	filerate := 0
+	isfirstmy := true
+	totl := 0
+	for _, f := range files {
+		if f.ListID == lstid {
+			continue
+		}
+		ques = ques[:0]
+		err := json.Unmarshal(f.Questions, &ques)
+		if err != nil {
+			return nil, err
+		}
+		sum := 0.0
+		cnt := 0
+		for _, q := range myques {
+			if isfirstmy {
+				qs = append(qs, question{
+					Count: len(q.Sub),
+					Point: q.Points,
+					Name:  q.Name,
+				})
+			}
+			for i, subq := range q.Sub {
+				p, err := getQuestionDupFromPaper(subq, ques, lst.IsTemp)
+				if err != nil {
+					return nil, err
+				}
+				heap.Push(&dh, duplication{
+					Percent: int(math.Round(p * 100)),
+					Name:    q.Name + "." + strconv.Itoa(i+1),
+				})
+				sum += p
+				cnt++
+			}
+		}
+		isfirstmy = false
+		pc := int(math.Round(sum * 100 / float64(cnt)))
+		flst, err := f.GetList(&global.FileDB)
+		name := ""
+		if err != nil {
+			name = err.Error()
+		} else {
+			name = flst.Desc
+		}
+		filesdups = append(filesdups, duplication{
+			Percent: pc,
+			Name:    name,
+		})
+		filerate += pc
+		totl++
+	}
+	if totl == 0 {
+		return nil, sql.ErrNullResult
+	}
+	i := dh.Len()
+	ds := make([]duplication, 10)
+	if i > 10 {
+		i = 10
+	} else {
+		for j := i; j < 10; j++ {
+			ds[j] = duplication{Name: "N/A"}
+		}
+	}
+	for i--; i >= 0; i-- {
+		ds[i] = heap.Pop(&dh).(duplication)
+	}
+	return &filestatusdup{
+		Name:         file.Class + ".docx",
+		Size:         float64(lst.Size) / 1024 / 1024, // MB
+		Rate:         filerate / totl,
+		Questions:    qs,
+		Duplications: ds,
+		Files:        filesdups,
 	}, nil
 }
 
@@ -165,7 +272,7 @@ func init() {
 				return
 			}
 		}
-		lst, err := getFileList(count, istemp)
+		lst, err := getFileList(count, *user.ID, istemp)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
@@ -275,6 +382,51 @@ func init() {
 			return
 		}
 		fstat, err := getFileStatus(id, user)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		writeresult(w, codeSuccess, fstat, messageOk, typeSuccess)
+	}}
+
+	apimap["/api/checkFileDup"] = &apihandler{"GET", func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		user := usertokens.Get(token)
+		if user == nil {
+			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
+			return
+		}
+		idstr := r.URL.Query().Get("id")
+		if idstr == "" {
+			writeresult(w, codeError, nil, "empty id", typeError)
+			return
+		}
+		id, err := strconv.Atoi(idstr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		ysstr := r.URL.Query().Get("ys")
+		if ysstr == "" {
+			writeresult(w, codeError, nil, "empty ys", typeError)
+			return
+		}
+		ys, err := strconv.Atoi(ysstr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		yestr := r.URL.Query().Get("ye")
+		if yestr == "" {
+			writeresult(w, codeError, nil, "empty ye", typeError)
+			return
+		}
+		ye, err := strconv.Atoi(yestr)
+		if err != nil {
+			writeresult(w, codeError, nil, err.Error(), typeError)
+			return
+		}
+		fstat, err := checkFileDup(id, user, global.StudyYear(ys), global.StudyYear(ye))
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return

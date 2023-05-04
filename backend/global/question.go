@@ -103,7 +103,7 @@ func (f *FileDatabase) GetQuestion(id int64, istemp bool) (Question, error) {
 }
 
 // GetQuestionHex by hexid
-func (f *FileDatabase) GetQuestionHex(hexid string, istemp bool) (q Question, err error) {
+func (f *FileDatabase) GetQuestionByHex(hexid string, istemp bool) (q Question, err error) {
 	idb, err := hex.DecodeString(hexid)
 	if err != nil {
 		return

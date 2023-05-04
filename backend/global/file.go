@@ -98,6 +98,12 @@ func (sy StudyYear) String() string {
 	return strconv.Itoa(int(sy)) + "-" + strconv.Itoa(int(next)) + "学年"
 }
 
+func (file *File) GetList(f *FileDatabase) (List, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(file.ListID))
+}
+
 // DelFile by listid
 func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 	user, err := UserDB.GetUserByID(uid)
@@ -162,10 +168,10 @@ func (f *FileDatabase) DelFile(lstid, uid int, istemp bool) error {
 }
 
 // GetFile get analyzed file's structure from List(ID)
-func (f *FileDatabase) GetFile(lstid, uid int) (file *File, sz int64, istemp bool, err error) {
+func (f *FileDatabase) GetFile(lstid, uid int) (file *File, lst List, err error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
-	lst, err := sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
+	lst, err = sql.Find[List](&f.db, FileTableList, "WHERE ID="+strconv.Itoa(lstid))
 	if err != nil {
 		return
 	}
@@ -187,5 +193,12 @@ func (f *FileDatabase) GetFile(lstid, uid int) (file *File, sz int64, istemp boo
 	if err != nil {
 		return
 	}
-	return &filestruct, lst.Size, lst.IsTemp, nil
+	return &filestruct, lst, nil
+}
+
+// GetFilesByYearRange ...
+func (f *FileDatabase) GetFilesByYearRange(yearstart, yearend StudyYear) ([]*File, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return sql.FindAll[File](&f.db, FileTableFile, "WHERE Year>="+strconv.Itoa(int(yearstart))+" AND Year<="+strconv.Itoa(int(yearend)))
 }

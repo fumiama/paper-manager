@@ -20,3 +20,12 @@ export interface FileStatus {
   questions: Question[]
   duplications: Duplication[]
 }
+
+export interface FileDupStatus {
+  name: string
+  size: number
+  rate: number
+  questions: Question[]
+  duplications: Duplication[]
+  files: Duplication[]
+}

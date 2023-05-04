@@ -1,4 +1,5 @@
 import { FormSchema } from '/@/components/Form'
+import { BasicColumn } from '/@/components/Table/src/types/table'
 
 export const schemas: FormSchema[] = [
   {
@@ -20,5 +21,18 @@ export const taskSchemas: FormSchema[] = [
       placeholder: ['起始年份', '结束年份'],
       showTime: { format: 'YYYY' },
     },
+  },
+]
+export const columns: BasicColumn[] = [
+  {
+    title: '试卷',
+    dataIndex: 'name',
+    fixed: 'left',
+    width: 200,
+  },
+  {
+    title: '重复率(%)',
+    dataIndex: 'percent',
+    width: 150,
   },
 ]
