@@ -9,7 +9,11 @@ const menu: MenuModule = {
     children: [
       {
         path: 'index',
-        name: t('routes.templist.name'),
+        name: t('routes.templist.templist'),
+      },
+      {
+        path: 'chkdup',
+        name: t('routes.templist.dup'),
       },
     ],
   },

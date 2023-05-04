@@ -5,10 +5,16 @@
         下载试卷 ({{ docxSizeRef.toFixed(2) }}MB)
       </a-button>
     </template>
-    <div ref="chartRef" :style="{ height, width }"></div>
-    <div class="docxWrap" :style="{ width }">
-      <div ref="docxRef"></div>
-    </div>
+
+    <a-card title="分析报告" :bordered="false">
+      <div ref="chartRef" :style="{ height, width }"></div>
+    </a-card>
+
+    <a-card title="原卷预览" :bordered="false" class="!mt-5">
+      <div class="docxWrap" :style="{ width }">
+        <div ref="docxRef"></div>
+      </div>
+    </a-card>
   </PageWrapper>
 </template>
 <script lang="ts">
@@ -17,6 +23,7 @@
   import { PageWrapper } from '/@/components/Page'
   import { useECharts } from '/@/hooks/web/useECharts'
   import { renderAsync } from 'docx-preview'
+  import { Card } from 'ant-design-vue'
   import { downloadFile, getFileStatus, getFileBlob } from '/@/api/page'
   import { useMessage } from '/@/hooks/web/useMessage'
   import { useGo } from '/@/hooks/web/usePage'
@@ -56,7 +63,7 @@
 
   export default defineComponent({
     name: 'PaperAnalyzeTab',
-    components: { PageWrapper },
+    components: { PageWrapper, [Card.name]: Card },
     props: {
       width: {
         type: String as PropType<string>,
@@ -133,7 +140,7 @@
                   },
                 },
                 {
-                  text: '重复率: ' + ret.rate.toFixed(2) + '%, 前十如下',
+                  text: '全库重复率: ' + ret.rate.toFixed(2) + '%, 前十如下',
                   left: '40%',
                   top: '1%',
                   textStyle: {

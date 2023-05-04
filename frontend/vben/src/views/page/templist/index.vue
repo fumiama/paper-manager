@@ -1,15 +1,18 @@
 <template>
-  <PageWrapper :class="prefixCls" :title="t('routes.templist.name')">
+  <PageWrapper :class="prefixCls" :title="t('routes.templist.templist')">
     <template #headerContent>
-      <BasicUpload
-        name="paper"
-        v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
-        :maxSize="64"
-        :maxNumber="16"
-        :api="uploadApi"
-        @change="onChange"
-        :accept="['application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
-      />
+      <div>
+        <p> 此处用来临时上传存放待查重试卷备用。 </p>
+        <BasicUpload
+          name="paper"
+          v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
+          :maxSize="64"
+          :maxNumber="16"
+          :api="uploadApi"
+          @change="onChange"
+          :accept="['application/vnd.openxmlformats-officedocument.wordprocessingml.document']"
+        />
+      </div>
     </template>
     <div :class="`${prefixCls}__top`">
       <a-row :gutter="12">

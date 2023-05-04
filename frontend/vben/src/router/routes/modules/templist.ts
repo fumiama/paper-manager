@@ -8,7 +8,6 @@ const templist: AppRouteModule = {
   component: LAYOUT,
   redirect: '/templist/index',
   meta: {
-    hideChildrenInMenu: true,
     icon: 'ion:ios-analytics',
     title: t('routes.templist.name'),
     orderNo: 30,
@@ -19,9 +18,17 @@ const templist: AppRouteModule = {
       name: 'TempListPage',
       component: () => import('/@/views/page/templist/index.vue'),
       meta: {
-        title: t('routes.templist.name'),
-        icon: 'ion:file-tray-full-outline',
-        hideMenu: true,
+        title: t('routes.templist.templist'),
+        icon: 'ion:albums-outline',
+      },
+    },
+    {
+      path: 'chkdup',
+      name: 'CheckDupPage',
+      component: () => import('/@/views/page/chkdup/index.vue'),
+      meta: {
+        title: t('routes.templist.dup'),
+        icon: 'ion:podium-sharp',
       },
     },
     {

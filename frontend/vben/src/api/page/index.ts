@@ -23,8 +23,21 @@ enum Api {
 /**
  * @description: Get file list
  */
-export const getFileList = (permanent: boolean, count?: number) => {
+export const getFileList = (permanent?: boolean, count?: number) => {
   return defHttp.get<getFileListModel>({ url: Api.GetFileList, params: { count, permanent } })
+}
+
+/**
+ * @description: Get file options
+ */
+export const getFileOptions = async () => {
+  const data = await defHttp.get<getFileListModel>({
+    url: Api.GetFileList,
+  })
+  return data.map((item) => ({
+    label: item.description,
+    value: item.id.toString(),
+  }))
 }
 
 /**

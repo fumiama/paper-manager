@@ -31,7 +31,7 @@ type filelist struct {
 	Per   uint    `json:"percent"`
 }
 
-func getFileList(count int, istemp bool) ([]filelist, error) {
+func getFileList(count int, istemp *bool) ([]filelist, error) {
 	lst, err := global.FileDB.ListUploadedFile(istemp)
 	if err != nil && err != sql.ErrNullResult {
 		return nil, err
@@ -149,7 +149,12 @@ func init() {
 			writeresult(w, codeError, nil, errInvalidToken.Error(), typeError)
 			return
 		}
-		istemp := r.URL.Query().Get("permanent") != "true"
+		istemp := (*bool)(nil)
+		permanent := r.URL.Query().Get("permanent")
+		if permanent != "" {
+			b := permanent != "true"
+			istemp = &b
+		}
 		count := -1
 		var err error
 		countstr := r.URL.Query().Get("count")

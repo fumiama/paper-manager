@@ -83,11 +83,14 @@ func (f *FileDatabase) SaveFileToTemp(uploader int, file io.Reader, name string)
 }
 
 // ListUploadedFile will select all file that HasntAnalyzed && IsTemp or !HasntAnalyzed && !IsTemp
-func (f *FileDatabase) ListUploadedFile(istemp bool) (lst []*List, err error) {
+func (f *FileDatabase) ListUploadedFile(istemp *bool) (lst []*List, err error) {
 	q := ""
-	if istemp {
+	switch {
+	case istemp == nil:
+		q = "ORDER BY UpTime DESC"
+	case *istemp:
 		q = "WHERE IsTemp ORDER BY UpTime DESC"
-	} else {
+	default:
 		q = "WHERE (HasntAnalyzed AND IsTemp) OR (NOT HasntAnalyzed AND NOT IsTemp) ORDER BY UpTime DESC"
 	}
 	f.mu.RLock()
