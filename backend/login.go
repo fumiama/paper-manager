@@ -27,6 +27,7 @@ var (
 	errWrongPassword       = errors.New("invalid username or password")
 	errTooManyFailedLogins = errors.New("too many failed logins")
 	errAccountIsDisabled   = errors.New("account is disabled")
+	errUserTokenFull       = errors.New("user token full")
 )
 
 const (
@@ -143,6 +144,14 @@ func login(username, challenge string) (*loginResult, error) {
 		return nil, err
 	}
 	token := base64.RawStdEncoding.EncodeToString(buf[:])
+	cnt := 0
+	for usertokens.Get(token) != nil && cnt < 4096 {
+		token = base64.RawStdEncoding.EncodeToString(buf[:])
+		cnt++
+	}
+	if cnt >= 4096 {
+		return nil, errUserTokenFull
+	}
 	usertokens.Set(token, &user)
 	loginstatus.Store(username, loginStatusYes)
 	return &loginResult{
