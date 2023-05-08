@@ -63,8 +63,11 @@ func getLoginSalt(username string) (*saltinfo, error) {
 	}
 	salt := loginsalts.Get(username)
 	if salt.count != nil {
-		if atomic.AddUintptr(salt.count, 1) >= maxSaltCount {
+		x := atomic.AddUintptr(salt.count, 1)
+		if x == maxSaltCount {
 			time.AfterFunc(time.Minute*2, func() { atomic.StoreUintptr(salt.count, 0) })
+		}
+		if x >= maxSaltCount {
 			return nil, errTooManySalts
 		}
 		if salt.Salt != "" {
