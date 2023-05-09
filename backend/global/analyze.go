@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"io"
@@ -21,6 +22,10 @@ import (
 	"github.com/fumiama/go-docx"
 	"github.com/fumiama/paper-manager/backend/utils"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	ErrPaperFileExist = errors.New("paper file exist")
 )
 
 // AddFile from lst and copy it to analyzed path.
@@ -379,11 +384,14 @@ func (f *FileDatabase) AddFile(lstid int, reg *Regex, istemp bool, progress func
 	if err != nil {
 		return err
 	}
-	lst.Path = filebasepath + file.Class + ".docx"
 	lst.HasntAnalyzed = false
 	lst.Desc = fmt.Sprintf("%s%v%v%v%c卷",
 		file.Class, file.Year, file.Type.FirstSecond(), file.Type.MiddleFinal(), file.Type.AB(),
 	)
+	lst.Path = filebasepath + lst.Desc + ".docx"
+	if utils.IsExist(lst.Path) {
+		return ErrPaperFileExist
+	}
 	dstf, err := os.Create(lst.Path)
 	if err != nil {
 		return err
