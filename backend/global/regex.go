@@ -63,18 +63,14 @@ func (u *UserDatabase) SetUserRegex(id int, reg *Regex) error {
 }
 
 // GetUserRegex default newRegex()
-func (u *UserDatabase) GetUserRegex(id int) (*Regex, error) {
-	user, err := UserDB.GetUserByID(id)
-	if err != nil {
-		return nil, err
-	}
-	if !user.IsSuper() || id != *user.ID {
+func (u *UserDatabase) GetUserRegex(oper *User, id int) (*Regex, error) {
+	if !oper.IsSuper() && id != *oper.ID {
 		return nil, ErrInvalidRole
 	}
 	u.mu.RLock()
 	reg, _ := sql.Find[Regex](&u.db, UserTableRegex, "WHERE ID="+strconv.Itoa(id))
 	u.mu.RUnlock()
-	reg.ID = *user.ID
+	reg.ID = *oper.ID
 	rf := reflect.ValueOf(&reg).Elem()
 	defaultrf := reflect.ValueOf(GetDefaultRegex())
 	for i := 1; i < rf.NumField(); i++ {

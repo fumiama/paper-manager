@@ -99,10 +99,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	ff, h, err = r.FormFile("paper")
 	if err == nil {
 		defer ff.Close()
-		if !user.IsFileManager() {
-			writeresult(w, codeError, nil, "no upload permission", typeError)
-			return
-		}
 		ct := h.Header.Get("Content-Type")
 		fn := h.Filename
 		logrus.Infoln("[file.UploadHandler] receive paper, name:", fn)

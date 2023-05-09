@@ -67,7 +67,7 @@ func init() {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return
 		}
-		reg, err := global.UserDB.GetUserRegex(*user.ID)
+		reg, err := global.UserDB.GetUserRegex(user, id)
 		if err != nil {
 			writeresult(w, codeError, nil, err.Error(), typeError)
 			return

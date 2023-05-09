@@ -12,7 +12,7 @@ func getUserRegex(token string) (*global.Regex, error) {
 	if user == nil {
 		return nil, errInvalidToken
 	}
-	return global.UserDB.GetUserRegex(*user.ID)
+	return global.UserDB.GetUserRegex(user, *user.ID)
 }
 
 func init() {
