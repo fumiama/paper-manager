@@ -5,7 +5,6 @@
         <p> 此处用来临时上传存放待查重试卷备用。 </p>
         <BasicUpload
           name="paper"
-          v-if="hasPermission([RoleEnum.SUPER, RoleEnum.FILE_MANAGER])"
           :maxSize="64"
           :maxNumber="16"
           :api="uploadApi"
